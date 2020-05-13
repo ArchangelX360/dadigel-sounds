@@ -3,19 +3,19 @@ package se.dorne.discordbot.controllers
 import discord4j.rest.util.Snowflake
 import kotlinx.coroutines.flow.Flow
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import se.dorne.discordbot.models.ChannelResult
 import se.dorne.discordbot.models.GuildResult
+import se.dorne.discordbot.services.CustomAudioProvider
 import se.dorne.discordbot.services.DiscordService
-import se.dorne.discordbot.services.NoopAudioProvider
 import kotlin.time.ExperimentalTime
+
 
 @RestController
 @CrossOrigin
-class DiscordController(@Autowired val discordService: DiscordService) {
+class DiscordController(
+        @Autowired val discordService: DiscordService
+) {
 
     @OptIn(ExperimentalTime::class)
     @GetMapping("/guilds")
@@ -33,8 +33,7 @@ class DiscordController(@Autowired val discordService: DiscordService) {
 
     @GetMapping("/guilds/{guildId}/channels/{channelId}/join")
     suspend fun join(@PathVariable guildId: String, @PathVariable channelId: String): Boolean {
-        // FIXME implement an actual audio provider and inject here
-        discordService.join(Snowflake.of(guildId), Snowflake.of(channelId), NoopAudioProvider)
+        discordService.join(Snowflake.of(guildId), Snowflake.of(channelId), CustomAudioProvider())
         return true
     }
 
@@ -44,6 +43,9 @@ class DiscordController(@Autowired val discordService: DiscordService) {
         return true
     }
 
-    @GetMapping("/guilds/{guildId}/channels/{channelId}/play/{soundName}")
-    suspend fun play(@PathVariable guildId: String, @PathVariable channelId: String, @PathVariable soundName: String): Boolean = TODO("implement")
+    @GetMapping("/guilds/{guildId}/play")
+    suspend fun play(
+            @PathVariable guildId: String,
+            @RequestParam soundIdentifier: String
+    ): Boolean = this.discordService.play(Snowflake.of(guildId), soundIdentifier)
 }

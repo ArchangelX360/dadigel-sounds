@@ -13,6 +13,7 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
 	mavenCentral()
+	jcenter()
 }
 
 dependencies {
@@ -26,6 +27,7 @@ dependencies {
 
 	implementation("com.discord4j:discord4j-core:3.1.0.M2")
 	implementation("com.discord4j:discord4j-voice:3.1.0.M2")
+	implementation("com.sedmelluq:lavaplayer:1.3.48")
 
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {

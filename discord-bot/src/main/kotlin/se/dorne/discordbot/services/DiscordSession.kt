@@ -19,6 +19,7 @@ import se.dorne.discordbot.utils.launchDebounce
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
+import kotlin.time.seconds
 
 suspend fun DiscordClient.newSession(): DiscordSession {
     val client = login().awaitFirst()
@@ -80,7 +81,7 @@ class DiscordSession(
         if (channel !is VoiceChannel) {
             throw IllegalArgumentException("channel $channelId (${channel.name}) is not a voice channel")
         }
-        val connection = withTimeoutOrNull(5000) {
+        val connection = withTimeoutOrNull(5.seconds) {
             channel.join { it.setProvider(audioProvider) }.awaitFirst()
         }
         if (connection == null) {
