@@ -12,17 +12,21 @@ import {HttpClientModule} from '@angular/common/http';
 import {MatSelectModule} from '@angular/material/select';
 import {FormsModule} from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatInputModule} from '@angular/material/input';
+import {YoutubeComponent} from './youtube/youtube.component';
 
 @NgModule({
   declarations: [
     DiscordIntegrationComponent,
     SoundGridComponent,
     SoundTileComponent,
+    YoutubeComponent,
   ],
   imports: [
     CommonModule,
     SoundGridRoutingModule,
     MatButtonModule,
+    MatInputModule,
     MatCardModule,
     HttpClientModule,
     MatSelectModule,

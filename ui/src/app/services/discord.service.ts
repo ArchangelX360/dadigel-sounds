@@ -50,14 +50,16 @@ export class DiscordService {
     return this.observe<boolean>(`${environment.botApi}/guilds/${guildId}/isConnected`, (e) => e);
   }
 
-  playSoundInChannel(
+  playSoundInGuild(
     guildId: string,
-    channelId: string,
     soundName: string,
   ): Observable<string> {
     return this.http.get(
-      `${environment.botApi}/guilds/${guildId}/channels/${channelId}/play/${soundName}`,
+      `${environment.botApi}/guilds/${guildId}/play`,
       {
+        params: {
+          soundIdentifier: soundName,
+        },
         responseType: 'text',
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',

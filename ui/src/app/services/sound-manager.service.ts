@@ -3,7 +3,7 @@ import {Sound} from '../models/sound';
 import {DiscordService} from './discord.service';
 import {from, Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {Channel, Guild} from '../models/discord';
+import {Guild} from '../models/discord';
 
 @Injectable()
 export class SoundManagerService {
@@ -213,36 +213,34 @@ export class SoundManagerService {
   }
 
   playSound(
-    filename: string,
+    soundIdentifier: string,
     guild?: Guild,
-    channel?: Channel,
   ): Observable<string> {
-    if (!this.mappings.find(m => m.fileName === filename)) {
-      throw new Error('sound not found');
+    if (guild?.id) {
+      return this.discordService.playSoundInGuild(
+        guild.id,
+        soundIdentifier,
+      );
     }
 
-    if (guild?.id && channel?.id) {
-      return this.discordService.playSoundInChannel(
-        guild.id,
-        channel.id,
-        filename,
-      );
-    } else {
-      if (this.currentSong) {
-        this.currentSong.pause();
-      }
-      // eslint-disable-next-line no-undef
-      this.currentSong = new Audio(this.soundRoot + filename);
-      this.currentSong.load();
-      return from(this.currentSong.play()).pipe(
-        map(() => {
-          return 'successfully played locally';
-        }),
-      );
+    if (!this.mappings.find(m => m.fileName === soundIdentifier)) {
+      throw new Error(`sound ${soundIdentifier} not found`);
     }
+
+    if (this.currentSong) {
+      this.currentSong.pause();
+    }
+    // eslint-disable-next-line no-undef
+    this.currentSong = new Audio(this.soundRoot + soundIdentifier);
+    this.currentSong.load();
+    return from(this.currentSong.play()).pipe(
+      map(() => {
+        return 'successfully played locally';
+      }),
+    );
   }
 
   getSounds(): Observable<Array<Sound>> {
     return this.sounds;
-  }
+  };
 }

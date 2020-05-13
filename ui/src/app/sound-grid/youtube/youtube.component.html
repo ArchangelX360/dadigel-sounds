@@ -1,0 +1,11 @@
+<mat-card>
+    <mat-card-title>YouTube Link</mat-card-title>
+    <mat-card-content>
+        <mat-form-field>
+            <mat-label>YouTube link</mat-label>
+            <input [(ngModel)]="youtubeLink" matInput placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                   type="text">
+        </mat-form-field>
+        <button (click)="onPlayOnDiscordClick()" mat-raised-button>Play on Discord</button>
+    </mat-card-content>
+</mat-card>

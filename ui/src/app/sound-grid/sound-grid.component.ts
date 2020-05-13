@@ -6,7 +6,6 @@ import {from, Observable, Subscription} from 'rxjs';
 import {Connection} from '../models/discord';
 import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {DiscordService} from '../services/discord.service';
 
 @Component({
   selector: 'app-sound-grid',
@@ -16,7 +15,6 @@ import {DiscordService} from '../services/discord.service';
 export class SoundGridComponent implements OnInit, OnDestroy {
   sounds: Observable<Array<Sound>>;
   readonly soundQueryParamKey = 'play_sound';
-  isConnected: Observable<boolean>;
   private subscriptions: Subscription[] = [];
   private readonly initSound: string | undefined;
   private activeConnection: Connection | undefined;
@@ -26,14 +24,11 @@ export class SoundGridComponent implements OnInit, OnDestroy {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private snackbar: MatSnackBar,
-    private discordService: DiscordService,
   ) {
     this.sounds = this.soundManager.getSounds();
     this.initSound = this.activatedRoute.snapshot.queryParamMap.get(
       this.soundQueryParamKey,
     );
-
-    this.isConnected = this.discordService.isConnected('1');
   }
 
   async ngOnInit() {
@@ -43,7 +38,6 @@ export class SoundGridComponent implements OnInit, OnDestroy {
           .playSound(
             this.initSound,
             this.activeConnection?.guild,
-            this.activeConnection?.channel,
           )
           .subscribe(
             result => console.log(result),
@@ -57,13 +51,12 @@ export class SoundGridComponent implements OnInit, OnDestroy {
     this.activeConnection = connection;
   }
 
-  async onSoundSelected(s: Sound) {
+  async onSoundSelected(soundIdentifier: string) {
     this.subscriptions.push(
       this.soundManager
         .playSound(
-          s.fileName,
+          soundIdentifier,
           this.activeConnection?.guild,
-          this.activeConnection?.channel,
         )
         .pipe(
           tap(() =>
@@ -71,7 +64,7 @@ export class SoundGridComponent implements OnInit, OnDestroy {
               this.router.navigate([], {
                 relativeTo: this.activatedRoute,
                 queryParams: {
-                  [this.soundQueryParamKey]: s.fileName,
+                  [this.soundQueryParamKey]: soundIdentifier,
                 },
               }),
             ),
