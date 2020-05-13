@@ -1,0 +1,71 @@
+name: ui
+
+defaults:
+  run:
+    working-directory: ./ui
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - 'discord-bot/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install Dependencies
+        run: npm install
+      # - name: Test
+      #   run: npm run ng test
+      - name: Bundle production
+        run: npm run dist
+      - name: Upload production bundle
+        uses: actions/upload-artifact@v1
+        with:
+          name: bundle
+          path: ./ui/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download production bundle
+        uses: actions/download-artifact@v1
+        with:
+          name: bundle
+          path: ./ui/dist
+      - name: Deploying to ${{ secrets.HOST }}
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          local: ./ui/dist
+          concurrency: 10
+          remote: /tmp/dadigel-sounds-${{ github.sha }}-${{ github.run_id }}
+      - name: Enabling traffic
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          script: |
+            rm -rf /var/www/dadigel-sounds
+            mkdir -p /var/www/dadigel-sounds
+            mv /tmp/dadigel-sounds-${{ github.sha }}-${{ github.run_id }}/dadigel-sounds/* /var/www/dadigel-sounds
+            rm -rf /tmp/dadigel-sounds-${{ github.sha }}-${{ github.run_id }}

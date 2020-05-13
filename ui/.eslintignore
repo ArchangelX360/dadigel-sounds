@@ -1,0 +1,3 @@
+discord-bot/lib/*
+ui/karma.conf.js
+**/node_modules/

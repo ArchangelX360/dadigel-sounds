@@ -1,0 +1,11 @@
+.sound-container {
+  flex-direction: row;
+  display: flex;
+  overflow: auto;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+
+mat-card {
+  margin: 5px;
+}

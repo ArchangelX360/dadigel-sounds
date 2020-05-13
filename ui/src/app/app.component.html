@@ -1,0 +1,15 @@
+<a [href]="mainSection | async" class="skip-link">Skip to main</a>
+
+<mat-toolbar color="primary">
+    <a class="home" mat-button routerLink="/">
+        <img alt="Dadigel's Logo" src="../assets/dadigel.ico">
+        <span>Dadigel's Sounds!</span>
+    </a>
+    <a mat-button routerLink="sounds">SoundBox</a>
+    <a mat-button routerLink="gifs">Gifs</a>
+</mat-toolbar>
+
+<main [id]="mainSectionId">
+    <router-outlet></router-outlet>
+</main>
+

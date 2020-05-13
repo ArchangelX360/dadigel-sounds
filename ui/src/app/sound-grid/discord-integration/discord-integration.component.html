@@ -1,0 +1,32 @@
+<mat-card>
+    <mat-card-title>Discord Bot</mat-card-title>
+    <mat-card-content>
+        <mat-form-field>
+            <mat-label>Guilds</mat-label>
+            <mat-select (ngModelChange)="selectGuild($event)" [ngModel]="selectedGuild">
+                <mat-option *ngFor="let g of guilds | async" [value]="g">
+                    {{g.name}} ({{g.id}})
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field *ngIf="selectedGuild">
+            <mat-label>Channels</mat-label>
+            <mat-select (ngModelChange)="selectChannel($event)" [ngModel]="selectedChannel">
+                <mat-option *ngFor="let c of channels | async" [value]="c">
+                    {{c.name}} ({{c.id}})
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <button
+                (click)="joinChannel(selectedGuild, selectedChannel)"
+                *ngIf="selectedGuild && selectedChannel && (activeConnection?.channel !== selectedChannel || activeConnection?.guild !== selectedGuild)"
+                color="primary"
+                mat-raised-button>
+            Join {{selectedChannel.name}}
+        </button>
+        <button (click)="leaveChannel(activeConnection.guild)" *ngIf="selectedGuild && activeConnection" color="warn"
+                mat-button>
+            Leave {{activeConnection.channel.name}} ({{activeConnection.guild.name}})
+        </button>
+    </mat-card-content>
+</mat-card>
