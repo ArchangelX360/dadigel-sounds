@@ -96,8 +96,11 @@ class DiscordSession(
     }
 
     suspend fun leave(guildId: Snowflake) {
-        val connection = connectionsByGuild[guildId] ?: error("No channel to leave in guild $guildId")
-        connectionsByGuild.remove(guildId)
+        val connection = connectionsByGuild.remove(guildId)
+        if (connection == null ) {
+            logger.warn("Trying to leave guild $guildId with no active connection")
+            return
+        }
         connection.disconnect().awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
     }
 
