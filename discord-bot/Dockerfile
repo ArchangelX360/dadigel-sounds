@@ -1,4 +1,4 @@
-FROM hypriot/rpi-java:jre-1.8.111
+FROM arm32v7/adoptopenjdk:11-jre-hotspot-bionic
 
 EXPOSE 8092
 
