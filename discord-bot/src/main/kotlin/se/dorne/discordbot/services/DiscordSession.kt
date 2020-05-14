@@ -92,16 +92,30 @@ class DiscordSession(
         if (connectionsByGuild.containsKey(guildId)) {
             leave(guildId)
         }
+        val alreadyInChannel = isInChannel(guildId, channelId)
+        if (alreadyInChannel) {
+            logger.warn("Trying to join channel $channelId in guild $guildId while already in it")
+            return
+        }
+        performJoin(guildId, channelId, audioProvider)
+    }
+
+    private fun isInChannel(guildId: Snowflake, channelId: Snowflake): Boolean =
+        getOrCreateJoinedChannelState(guildId).value?.id == channelId
+
+    private suspend fun performJoin(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
         val guild = client.getGuildById(guildId).awaitFirst()
         val channel = guild.getChannelById(channelId).awaitFirst()
         if (channel !is VoiceChannel) {
-            throw IllegalArgumentException("channel $channelId (${channel.name}) is not a voice channel")
+            logger.error("channel $channelId (${channel.name}) is not a voice channel")
+            return
         }
         val connection = withTimeoutOrNull(5.seconds) {
             channel.join { it.setProvider(audioProvider) }.awaitFirst()
         }
         if (connection == null) {
-            error("Timed out when trying to join a channel")
+            logger.error("Timed out when trying to join channel $channelId in guild $guildId")
+            return
         }
         connectionsByGuild[guildId] = connection
         getOrCreateJoinedChannelState(guildId).value = channel
