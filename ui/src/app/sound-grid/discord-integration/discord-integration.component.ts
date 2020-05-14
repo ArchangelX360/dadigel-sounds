@@ -41,10 +41,6 @@ export class DiscordIntegrationComponent implements OnDestroy {
     this.playingTrack = botStatus.pipe(map((bs, _) => bs.playingTrack))
   }
 
-  selectChannel(c: Channel) {
-    this.selectedChannel = c;
-  }
-
   joinChannel(guild: Guild, channel: Channel) {
     this.subscriptions.push(
       this.discordService.joinChannel(guild.id, channel.id).subscribe(
