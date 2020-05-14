@@ -89,6 +89,9 @@ class DiscordSession(
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
         timeoutTicker.tick()
+        if (connectionsByGuild.containsKey(guildId)) {
+            leave(guildId)
+        }
         val guild = client.getGuildById(guildId).awaitFirst()
         val channel = guild.getChannelById(channelId).awaitFirst()
         if (channel !is VoiceChannel) {
