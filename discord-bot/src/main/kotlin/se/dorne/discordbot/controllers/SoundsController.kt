@@ -11,7 +11,5 @@ import se.dorne.discordbot.models.Sound
 @CrossOrigin
 class SoundsController {
     @GetMapping("/sounds")
-    fun listSounds(): Flow<List<Sound>> =
-            // TODO("implement sound asset retrieval")
-            flowOf(emptyList())
+    fun listSounds(): List<Sound> = emptyList()
 }
