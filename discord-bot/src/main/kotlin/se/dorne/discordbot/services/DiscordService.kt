@@ -4,10 +4,7 @@ import discord4j.core.DiscordClient
 import discord4j.rest.util.Snowflake
 import discord4j.voice.VoiceConnection
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.Logger
@@ -15,9 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import se.dorne.discordbot.configurations.DiscordConfiguration
-import se.dorne.discordbot.models.ChannelResult
-import se.dorne.discordbot.models.GuildResult
-import se.dorne.discordbot.models.toResult
+import se.dorne.discordbot.models.*
 import se.dorne.discordbot.utils.awaitVoidWithTimeout
 import kotlin.time.ExperimentalTime
 
@@ -30,28 +25,27 @@ class DiscordService(
     private val discord = DiscordClient.create(discordConfiguration.bot.token)
 
     private val sessionMutex = Mutex()
-    private var session: DiscordSession? = null
+
+    private var session: MutableStateFlow<DiscordSession?> = MutableStateFlow(null)
 
     internal val connections: MutableMap<Snowflake, VoiceConnection> = mutableMapOf()
 
     private suspend fun getSession(): DiscordSession {
         sessionMutex.withLock {
-            if (session?.connected != true) {
+            if (session.value?.connected != true) {
                 logger.info("No connected session, (re-)connecting to Discord...")
-                session = discord.newSession()
+                session.value = discord.newSession()
             }
-            return session ?: error("failed to login to Discord")
+            return session.value ?: error("failed to login to Discord")
         }
     }
 
-    fun listGuilds(): Flow<List<GuildResult>> = flow {
-        val session = getSession()
-        emitAll(session.watchGuilds().map { guilds -> guilds.map { it.toResult() } })
+    fun listGuilds(): Flow<List<GuildResult>> = session.flatMapLatest {
+        it?.watchGuilds()?.map { guilds -> guilds.toGuildResults() } ?: emptyFlow()
     }
 
-    fun listChannels(guildId: Snowflake): Flow<List<ChannelResult>> = flow {
-        val session = getSession()
-        emitAll(session.watchChannels(guildId).map { channels -> channels.map { it.toResult() } })
+    fun listChannels(guildId: Snowflake): Flow<List<ChannelResult>> = session.flatMapLatest {
+        it?.watchChannels(guildId)?.map { channels -> channels.toChannelResults() } ?: emptyFlow()
     }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {

@@ -14,6 +14,10 @@ class GuildResult(
 
 data class ChannelResult(val id: String, val name: String)
 
+fun List<Guild>.toGuildResults() = map { it.toResult() }
+
 fun Guild.toResult() = GuildResult(id.asString(), name)
+
+fun List<VoiceChannel>.toChannelResults() = map { it.toResult() }
 
 fun VoiceChannel.toResult() = ChannelResult(id.asString(), name)
