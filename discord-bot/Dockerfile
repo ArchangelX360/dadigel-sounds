@@ -5,4 +5,4 @@ EXPOSE ${PORT}
 
 COPY build/libs/discord-bot-0.0.1-SNAPSHOT.jar discord-bot.jar
 
-ENTRYPOINT ['java', '-Dserver.port=${PORT}', '-jar', 'discord-bot.jar']
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "discord-bot.jar"]
