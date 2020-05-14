@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.Logger
@@ -48,13 +49,28 @@ class DiscordService(
         }
     }
 
-    fun listGuilds(): Flow<List<GuildResult>> = session.flatMapLatest {
-        it?.watchGuilds()?.map { guilds -> guilds.toGuildResults() } ?: emptyFlow()
+    private suspend fun ensureConnected() {
+        getSession()
     }
 
-    fun listChannels(guildId: Snowflake): Flow<List<ChannelResult>> = session.flatMapLatest {
-        it?.watchChannels(guildId)?.map { channels -> channels.toChannelResults() } ?: emptyFlow()
-    }
+    // Some things to note here:
+    //  1. ensureConnected() makes sure we have a session at the subscription start and we can listen to guilds
+    //  2. the session flow ensures that we get the events of the new session if deco/reco happens
+    //  3. if the bot auto-disconnects, any active subscription on this flow won't get new events until someone else
+    //  subscribes or if join/leave are used.
+    //  We could end this flow on disconnect (and thus stop subscribers), but this is inferior because it would
+    //  prevent #2 without solving #3.
+    //  Another option would be to auto-reconnect as long as there is a subscriber, but this would be a waste if
+    //  someone just leaves his browser open forever.
+    fun listGuilds(): Flow<List<GuildResult>> = session.onStart { ensureConnected() }
+        .flatMapLatest {
+            it?.watchGuilds()?.map { guilds -> guilds.toGuildResults() } ?: MutableStateFlow(emptyList())
+        }
+
+    fun listChannels(guildId: Snowflake): Flow<List<ChannelResult>> = session.onStart { ensureConnected() }
+        .flatMapLatest {
+            it?.watchChannels(guildId)?.map { channels -> channels.toChannelResults() } ?: emptyFlow()
+        }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {
         val audioProvider = audioService.registerGuild(guildId)
@@ -70,7 +86,8 @@ class DiscordService(
     @OptIn(ExperimentalTime::class)
     fun botStatus(guildId: Snowflake): Flow<BotStatus> {
         val playingTrack = audioService.watchPlayingTrack(guildId)
-        val joinedChannel = session.flatMapLatest { it?.watchedJoinedChannel(guildId) ?: emptyFlow() }
+        val joinedChannel = session.onStart { ensureConnected() }
+            .flatMapLatest { it?.watchedJoinedChannel(guildId) ?: emptyFlow() }
             .map { it?.toResult() }
         return joinedChannel.combine(playingTrack) { channel, track ->
             computeBotStatus(channel, track)
