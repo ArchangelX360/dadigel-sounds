@@ -1,4 +1,4 @@
-FROM arm32v7/adoptopenjdk:11-jre-hotspot-bionic
+FROM docker.pkg.github.com/archangelx360/dadigel-sounds/bot-runtime:latest
 
 EXPOSE 8092
 
