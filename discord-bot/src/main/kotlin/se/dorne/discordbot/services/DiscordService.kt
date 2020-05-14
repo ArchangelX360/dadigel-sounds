@@ -28,8 +28,6 @@ class DiscordService(
 
     private var session: MutableStateFlow<DiscordSession?> = MutableStateFlow(null)
 
-    internal val connections: MutableMap<Snowflake, VoiceConnection> = mutableMapOf()
-
     private suspend fun getSession(): DiscordSession {
         sessionMutex.withLock {
             if (session.value?.connected != true) {
@@ -50,15 +48,13 @@ class DiscordService(
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {
         val audioProvider = audioService.registerGuild(guildId)
-        val voiceConnection = getSession().join(guildId, channelId, audioProvider)
-        connections[guildId] = voiceConnection
+        getSession().join(guildId, channelId, audioProvider)
+        // FIXME unregister from audio service if join() call fails
     }
 
     suspend fun leave(guildId: Snowflake) {
-        val connection = connections[guildId] ?: error("No channel to leave in guild $guildId")
-        connections.remove(guildId)
         audioService.unregisterGuild(guildId)
-        connection.disconnect().awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
+        getSession().leave(guildId)
     }
 
     // FIXME use ChannelResult instead of boolean to provide the current channel name to UI and allow to leave via channel ID

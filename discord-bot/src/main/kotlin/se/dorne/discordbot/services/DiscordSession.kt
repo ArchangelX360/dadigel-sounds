@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import se.dorne.discordbot.utils.DebounceTicker
 import se.dorne.discordbot.utils.awaitVoidWithTimeout
 import se.dorne.discordbot.utils.launchDebounce
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
@@ -44,6 +45,8 @@ class DiscordSession(
     private val guildWatcher: GuildWatcher = GuildWatcher(client)
 
     private val joinedChannel: MutableStateFlow<VoiceChannel?> = MutableStateFlow(null)
+
+    private val connectionsByGuild: MutableMap<Snowflake, VoiceConnection> = ConcurrentHashMap()
 
     private val timeoutTicker: DebounceTicker
 
@@ -75,7 +78,7 @@ class DiscordSession(
 
     fun watchedJoinedChannel(): Flow<VoiceChannel?> = joinedChannel
 
-    suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider): VoiceConnection {
+    suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
         timeoutTicker.tick()
         val guild = client.getGuildById(guildId).awaitFirst()
         val channel = guild.getChannelById(channelId).awaitFirst()
@@ -88,8 +91,14 @@ class DiscordSession(
         if (connection == null) {
             error("Timed out when trying to join a channel")
         }
+        connectionsByGuild[guildId] = connection
         joinedChannel.value = channel
-        return connection
+    }
+
+    suspend fun leave(guildId: Snowflake) {
+        val connection = connectionsByGuild[guildId] ?: error("No channel to leave in guild $guildId")
+        connectionsByGuild.remove(guildId)
+        connection.disconnect().awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
     }
 
     suspend fun close() {
@@ -100,6 +109,7 @@ class DiscordSession(
     private fun shutdown() {
         connected = false
         joinedChannel.value = null
+        connectionsByGuild.clear()
         scope.cancel()
     }
 
