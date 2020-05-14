@@ -62,7 +62,7 @@ class DiscordService(
     @OptIn(ExperimentalTime::class)
     fun isConnected(guildId: Snowflake): Flow<Boolean> = flow {
         val session = getSession()
-        emitAll(session.watchedJoinedChannel().map { it != null })
+        emitAll(session.watchedJoinedChannel(guildId).map { it != null })
     }
 
     fun play(guildId: Snowflake, soundFilepath: String): Boolean {

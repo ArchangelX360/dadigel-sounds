@@ -7,11 +7,17 @@ import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Snowflake
 import discord4j.voice.AudioProvider
 import discord4j.voice.VoiceConnection
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import se.dorne.discordbot.utils.DebounceTicker
@@ -44,9 +50,9 @@ class DiscordSession(
 
     private val guildWatcher: GuildWatcher = GuildWatcher(client)
 
-    private val joinedChannel: MutableStateFlow<VoiceChannel?> = MutableStateFlow(null)
-
     private val connectionsByGuild: MutableMap<Snowflake, VoiceConnection> = ConcurrentHashMap()
+
+    private val joinedChannelsByGuild: MutableMap<Snowflake, MutableStateFlow<VoiceChannel?>> = ConcurrentHashMap()
 
     private val timeoutTicker: DebounceTicker
 
@@ -76,7 +82,10 @@ class DiscordSession(
 
     fun watchChannels(guildId: Snowflake): Flow<List<VoiceChannel>> = guildWatcher.watchChannels(guildId)
 
-    fun watchedJoinedChannel(): Flow<VoiceChannel?> = joinedChannel
+    fun watchedJoinedChannel(guildId: Snowflake): Flow<VoiceChannel?> = getOrCreateJoinedChannelState(guildId)
+
+    private fun getOrCreateJoinedChannelState(guildId: Snowflake) =
+            joinedChannelsByGuild.computeIfAbsent(guildId) { MutableStateFlow(null) }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
         timeoutTicker.tick()
@@ -92,16 +101,21 @@ class DiscordSession(
             error("Timed out when trying to join a channel")
         }
         connectionsByGuild[guildId] = connection
-        joinedChannel.value = channel
+        getOrCreateJoinedChannelState(guildId).value = channel
     }
 
     suspend fun leave(guildId: Snowflake) {
-        val connection = connectionsByGuild.remove(guildId)
-        if (connection == null ) {
-            logger.warn("Trying to leave guild $guildId with no active connection")
-            return
+        try {
+            val connection = connectionsByGuild.remove(guildId)
+            if (connection == null) {
+                logger.warn("Trying to leave guild $guildId with no active connection")
+                return
+            }
+            connection.disconnect()
+                .awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
+        } finally {
+            joinedChannelsByGuild[guildId]?.value = null
         }
-        connection.disconnect().awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
     }
 
     suspend fun close() {
@@ -111,7 +125,8 @@ class DiscordSession(
 
     private fun shutdown() {
         connected = false
-        joinedChannel.value = null
+        joinedChannelsByGuild.values.forEach { it.value = null}
+        joinedChannelsByGuild.clear()
         connectionsByGuild.clear()
         scope.cancel()
     }
