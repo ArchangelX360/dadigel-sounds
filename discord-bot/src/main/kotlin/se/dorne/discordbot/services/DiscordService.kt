@@ -20,8 +20,6 @@ import se.dorne.discordbot.models.GuildResult
 import se.dorne.discordbot.models.toResult
 import kotlin.time.ExperimentalTime
 
-data class Connection(val voice: VoiceConnection, val audioProvider: CustomAudioProvider)
-
 @Service
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
 class DiscordService(
@@ -33,7 +31,7 @@ class DiscordService(
     private val sessionMutex = Mutex()
     private var session: DiscordSession? = null
 
-    internal val connections: MutableMap<Snowflake, Connection> = mutableMapOf()
+    internal val connections: MutableMap<Snowflake, VoiceConnection> = mutableMapOf()
 
     private suspend fun getSession(): DiscordSession {
         sessionMutex.withLock {
@@ -55,7 +53,7 @@ class DiscordService(
         emitAll(session.watchChannels(guildId).map { channels -> channels.map { it.toResult() } })
     }
 
-    suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: CustomAudioProvider): Connection {
+    suspend fun join(guildId: Snowflake, channelId: Snowflake) {
         // FIXME: hack to prevent channel switch to timeout
         // First "join" works, but then any subsequent "join" will not emit in the Mono returned by Discord4J
         //  - Only leaving the channel without closing the session still times out
@@ -66,16 +64,16 @@ class DiscordService(
         }
         getSession().close()
 
+        val audioProvider = audioService.registerGuild(guildId)
         val voiceConnection = getSession().join(guildId, channelId, audioProvider)
-        val connection = Connection(voiceConnection, audioProvider)
-        connections[guildId] = connection
-        return connection
+        connections[guildId] = voiceConnection
     }
 
     suspend fun leave(guildId: Snowflake) {
         val connection = connections[guildId] ?: error("No channel to leave in guild $guildId")
-        connection.voice.disconnect()
+        connection.disconnect()
         connections.remove(guildId)
+        audioService.unregisterGuild(guildId)
     }
 
     // FIXME use ChannelResult instead of boolean to provide the current channel name to UI and allow to leave via channel ID
@@ -87,8 +85,7 @@ class DiscordService(
     }
 
     fun play(guildId: Snowflake, soundFilepath: String): Boolean {
-        val connection = connections[guildId] ?: error("No voice connection found in guild $guildId")
-        audioService.play(connection.audioProvider, soundFilepath)
+        audioService.play(guildId, soundFilepath)
         return true // FIXME: stream the state of the player to the client instead (e.g. currently playing, then done)
     }
 

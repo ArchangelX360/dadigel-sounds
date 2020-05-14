@@ -39,7 +39,8 @@ class ChannelWatcher(
             client.watch<ChannelEvent>()
                     .scan(initialChannels) { set, event -> set.updatedBy(event) }
                     .collect { channels ->
-                        mutableChannelsState.value = channels.sortedBy { it.name }
+                        val sortedChannelsList = channels.sortedBy { it.name }
+                        mutableChannelsState.value = sortedChannelsList
                     }
         }
     }

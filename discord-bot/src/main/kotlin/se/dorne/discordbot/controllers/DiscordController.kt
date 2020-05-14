@@ -6,10 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import se.dorne.discordbot.models.ChannelResult
 import se.dorne.discordbot.models.GuildResult
-import se.dorne.discordbot.services.CustomAudioProvider
 import se.dorne.discordbot.services.DiscordService
 import kotlin.time.ExperimentalTime
-
 
 @RestController
 @CrossOrigin
@@ -33,7 +31,7 @@ class DiscordController(
 
     @GetMapping("/guilds/{guildId}/channels/{channelId}/join")
     suspend fun join(@PathVariable guildId: String, @PathVariable channelId: String): Boolean {
-        discordService.join(Snowflake.of(guildId), Snowflake.of(channelId), CustomAudioProvider())
+        discordService.join(Snowflake.of(guildId), Snowflake.of(channelId))
         return true
     }
 
@@ -47,5 +45,5 @@ class DiscordController(
     suspend fun play(
             @PathVariable guildId: String,
             @RequestParam soundIdentifier: String
-    ): Boolean = this.discordService.play(Snowflake.of(guildId), soundIdentifier)
+    ): Boolean = discordService.play(Snowflake.of(guildId), soundIdentifier)
 }
