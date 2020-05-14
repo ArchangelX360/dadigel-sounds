@@ -58,4 +58,4 @@ jobs:
             docker rm dadigel-sounds-bot || true
             docker login -u ${{ github.actor }} -p ${{ github.token }} docker.pkg.github.com
             docker pull docker.pkg.github.com/archangelx360/dadigel-sounds/bot-api:latest
-            docker run -d -v /opt/dadigel-sounds:/opt --env CONFIGURATION_FOLDER=/opt/config -p 8092:8092 --name=dadigel-sounds-bot docker.pkg.github.com/archangelx360/dadigel-sounds/bot-api:latest
+            docker run -d -v /opt/dadigel-sounds:/opt -p 8092:8092 --name=dadigel-sounds-bot docker.pkg.github.com/archangelx360/dadigel-sounds/bot-api:latest
