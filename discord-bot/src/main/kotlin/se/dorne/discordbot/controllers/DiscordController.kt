@@ -4,6 +4,7 @@ import discord4j.rest.util.Snowflake
 import kotlinx.coroutines.flow.Flow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import se.dorne.discordbot.models.BotStatus
 import se.dorne.discordbot.models.ChannelResult
 import se.dorne.discordbot.models.GuildResult
 import se.dorne.discordbot.services.DiscordService
@@ -25,9 +26,8 @@ class DiscordController(
             discordService.listChannels(Snowflake.of(guildId))
 
     @OptIn(ExperimentalTime::class)
-    @GetMapping("/guilds/{guildId}/isConnected")
-    fun isConnected(@PathVariable guildId: String): Flow<Boolean> =
-            discordService.isConnected(Snowflake.of(guildId))
+    @GetMapping("/guilds/{guildId}/status")
+    fun botStatus(@PathVariable guildId: String): Flow<BotStatus> = discordService.botStatus(Snowflake.of(guildId))
 
     @GetMapping("/guilds/{guildId}/channels/{channelId}/join")
     suspend fun join(@PathVariable guildId: String, @PathVariable channelId: String): Boolean {

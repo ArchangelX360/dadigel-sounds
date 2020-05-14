@@ -21,3 +21,22 @@ fun Guild.toResult() = GuildResult(id.asString(), name)
 fun List<VoiceChannel>.toChannelResults() = map { it.toResult() }
 
 fun VoiceChannel.toResult() = ChannelResult(id.asString(), name)
+
+data class BotStatus(
+    val state: BotState,
+    val joinedChannel: ChannelResult?,
+    val playingTrack: TrackInfo?
+)
+
+enum class BotState {
+    // We don't need to distinguish true offline from "logged in but not joined"
+    // The Discord login of the bot is not a concern of the frontend
+    OFFLINE,
+    JOINED_IDLE,
+    PLAYING
+}
+
+data class TrackInfo(
+    val id: String,
+    val title: String
+)

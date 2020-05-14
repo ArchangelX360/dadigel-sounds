@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Channel, Guild} from '../models/discord';
+import {BotStatus, Channel, Guild} from '../models/discord';
 import {Observable, Subject} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
@@ -46,8 +46,8 @@ export class DiscordService {
   }
 
   // FIXME: use this
-  isConnected(guildId: string): Observable<boolean> {
-    return this.observe<boolean>(`${environment.botApi}/guilds/${guildId}/isConnected`, (e) => e);
+  getStatus(guildId: string): Observable<BotStatus> {
+    return this.observe<BotStatus>(`${environment.botApi}/guilds/${guildId}/status`);
   }
 
   playSoundInGuild(
@@ -68,11 +68,11 @@ export class DiscordService {
     );
   }
 
-  private observe<T>(url: string, converter: (e: any) => T = JSON.parse): Observable<T> {
+  private observe<T>(url: string): Observable<T> {
     const o = new Subject<T>();
     const es = new EventSource(url);
     es.onmessage = (ev) => {
-      o.next(converter(ev.data));
+      o.next(JSON.parse(ev.data));
     };
     return o
       .pipe(finalize(() => {

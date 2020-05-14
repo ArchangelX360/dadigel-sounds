@@ -5,6 +5,10 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener
+import com.sedmelluq.discord.lavaplayer.player.event.TrackEndEvent
+import com.sedmelluq.discord.lavaplayer.player.event.TrackStartEvent
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
@@ -15,15 +19,20 @@ import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer
 import discord4j.rest.util.Snowflake
 import discord4j.voice.AudioProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import se.dorne.discordbot.models.TrackInfo
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val MAX_OPUS_FRAME_SIZE = StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Service
 class AudioService {
 
@@ -41,10 +50,8 @@ class AudioService {
      * returned [AudioProvider].
      */
     fun registerGuild(guildId: Snowflake): AudioProvider {
-        val provider = CustomAudioProvider(audioManager.createPlayer())
-        audioProvider[guildId] = provider
         logger.info("Registered guild $guildId to play audio")
-        return provider
+        return getOrCreateAudioProvider(guildId)
     }
 
     /**
@@ -54,6 +61,11 @@ class AudioService {
         audioProvider.remove(guildId)
         logger.info("Unregistered guild $guildId")
     }
+
+    fun watchPlayingTrack(guildId: Snowflake): Flow<TrackInfo?> = getOrCreateAudioProvider(guildId).trackInfo
+
+    private fun getOrCreateAudioProvider(guildId: Snowflake) =
+        audioProvider.computeIfAbsent(guildId) { CustomAudioProvider(audioManager.createPlayer()) }
 
     /**
      * Plays the track identified by [soundFilepath] in the registered guild with the given
@@ -77,9 +89,12 @@ class AudioService {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 private class CustomAudioProvider(
     val player: AudioPlayer
-) : AudioProvider(ByteBuffer.allocate(MAX_OPUS_FRAME_SIZE)) {
+) : AudioProvider(ByteBuffer.allocate(MAX_OPUS_FRAME_SIZE)), AudioEventListener {
+
+    val trackInfo: MutableStateFlow<TrackInfo?> = MutableStateFlow(null)
 
     val scheduler = TrackScheduler(player)
 
@@ -95,6 +110,13 @@ private class CustomAudioProvider(
             buffer.flip()
         }
         return didProvide
+    }
+
+    override fun onEvent(event: AudioEvent?) {
+        when (event) {
+            is TrackStartEvent -> trackInfo.value = TrackInfo(event.track.identifier, event.track.info.title)
+            is TrackEndEvent -> trackInfo.value = null
+        }
     }
 }
 
