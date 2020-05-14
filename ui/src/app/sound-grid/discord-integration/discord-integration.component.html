@@ -24,9 +24,13 @@
                 mat-raised-button>
             Join {{selectedChannel.name}}
         </button>
-        <button (click)="leaveChannel(activeConnection.guild)" *ngIf="selectedGuild && activeConnection" color="warn"
+        <button (click)="leaveChannel(activeConnection.guild)"
+                *ngIf="selectedGuild && activeConnection && (joinedChannel | async) as chan"
+                color="warn"
                 mat-button>
-            Leave {{activeConnection.channel.name}} ({{activeConnection.guild.name}})
+            Leave {{chan?.name}} ({{activeConnection.guild.name}})
         </button>
+        <!-- FIXME move it to another component? -->
+        <mat-label *ngIf="playingTrack | async as track">Now playing: {{track.title}}</mat-label>
     </mat-card-content>
 </mat-card>

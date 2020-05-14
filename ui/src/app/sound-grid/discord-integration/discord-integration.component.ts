@@ -1,5 +1,6 @@
 import {Component, EventEmitter, OnDestroy, Output} from '@angular/core';
-import {Channel, Connection, Guild} from '../../models/discord';
+import { map, tap } from 'rxjs/operators';
+import {Channel, Connection, Guild, TrackInfo} from '../../models/discord';
 import {Observable, Subscription} from 'rxjs';
 import {DiscordService} from '../../services/discord.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -15,6 +16,10 @@ export class DiscordIntegrationComponent implements OnDestroy {
   channels: Observable<Array<Channel>>;
   selectedGuild: Guild;
   selectedChannel: Channel;
+
+  joinedChannel: Observable<Channel | null>
+  playingTrack: Observable<TrackInfo | null>
+
   // FIXME: transform into an Observable to handle connection drops
   activeConnection: Connection | undefined;
 
@@ -30,6 +35,10 @@ export class DiscordIntegrationComponent implements OnDestroy {
   selectGuild(g: Guild) {
     this.selectedGuild = g;
     this.channels = this.discordService.getChannels(g.id);
+
+    const botStatus = this.discordService.getStatus(g.id).pipe(tap(s => console.log("Bot status: ", s)));
+    this.joinedChannel = botStatus.pipe(map((bs, _) => bs.joinedChannel))
+    this.playingTrack = botStatus.pipe(map((bs, _) => bs.playingTrack))
   }
 
   selectChannel(c: Channel) {
