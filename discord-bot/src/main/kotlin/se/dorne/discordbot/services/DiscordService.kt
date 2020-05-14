@@ -10,10 +10,12 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import se.dorne.discordbot.configurations.DiscordConfiguration
@@ -32,7 +34,7 @@ import kotlin.time.ExperimentalTime
 class DiscordService(
         @Autowired discordConfiguration: DiscordConfiguration,
         @Autowired val audioService: AudioService
-) {
+) : DisposableBean {
     private val discord = DiscordClient.create(discordConfiguration.bot.token)
 
     private val sessionMutex = Mutex()
@@ -44,6 +46,7 @@ class DiscordService(
             if (session.value?.connected != true) {
                 logger.info("No connected session, (re-)connecting to Discord...")
                 session.value = discord.newSession()
+                logger.info("Connected to Discord")
             }
             return session.value ?: error("failed to login to Discord")
         }
@@ -110,6 +113,13 @@ class DiscordService(
     fun play(guildId: Snowflake, soundFilepath: String): Boolean {
         audioService.play(guildId, soundFilepath)
         return true // FIXME: stream the state of the player to the client instead (e.g. currently playing, then done)
+    }
+
+    override fun destroy() {
+        runBlocking {
+            logger.info("Closing Discord session")
+            session.value?.close()
+        }
     }
 
     companion object {
