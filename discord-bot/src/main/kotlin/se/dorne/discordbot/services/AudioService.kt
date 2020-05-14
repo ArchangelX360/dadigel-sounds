@@ -94,6 +94,10 @@ private class CustomAudioProvider(
     val player: AudioPlayer
 ) : AudioProvider(ByteBuffer.allocate(MAX_OPUS_FRAME_SIZE)), AudioEventListener {
 
+    init {
+        player.addListener(this)
+    }
+
     val trackInfo: MutableStateFlow<TrackInfo?> = MutableStateFlow(null)
 
     val scheduler = TrackScheduler(player)
