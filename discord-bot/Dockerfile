@@ -7,10 +7,4 @@ ENV CONFIGURATION_FILENAME discord.yml
 
 COPY build/libs/discord-bot-0.0.1-SNAPSHOT.jar /opt/discord-bot.jar
 
-ENTRYPOINT [
-    "java",
-    "-Dserver.port=${PORT}",
-    "-jar",
-    "/opt/discord-bot.jar",
-    "--spring.config.name=${CONFIGURATION_FILENAME}"
-]
+ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "/opt/discord-bot.jar", "--spring.config.name=${CONFIGURATION_FILENAME}"]
