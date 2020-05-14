@@ -17,11 +17,11 @@ class DiscordController(
 
     @OptIn(ExperimentalTime::class)
     @GetMapping("/guilds")
-    fun listGuild(): Flow<List<GuildResult>> = discordService.listGuilds()
+    fun listGuilds(): Flow<List<GuildResult>> = discordService.listGuilds()
 
     @OptIn(ExperimentalTime::class)
     @GetMapping("/guilds/{guildId}/channels")
-    fun listGuild(@PathVariable guildId: String): Flow<List<ChannelResult>> =
+    fun listChannels(@PathVariable guildId: String): Flow<List<ChannelResult>> =
             discordService.listChannels(Snowflake.of(guildId))
 
     @OptIn(ExperimentalTime::class)
