@@ -15,6 +15,7 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import se.dorne.discordbot.utils.DebounceTicker
+import se.dorne.discordbot.utils.awaitVoidWithTimeout
 import se.dorne.discordbot.utils.launchDebounce
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -92,10 +93,7 @@ class DiscordSession(
     }
 
     suspend fun close() {
-        val logoutEvent = client.logout().awaitFirstOrNull()
-        if (logoutEvent == null) {
-            logger.warn("Didn't get logout event, shutting down anyway...")
-        }
+        client.logout().awaitVoidWithTimeout(message = "Didn't get logout event, shutting down anyway...")
         shutdown()
     }
 

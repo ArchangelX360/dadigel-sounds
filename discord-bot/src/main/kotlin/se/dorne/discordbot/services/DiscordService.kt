@@ -18,6 +18,7 @@ import se.dorne.discordbot.configurations.DiscordConfiguration
 import se.dorne.discordbot.models.ChannelResult
 import se.dorne.discordbot.models.GuildResult
 import se.dorne.discordbot.models.toResult
+import se.dorne.discordbot.utils.awaitVoidWithTimeout
 import kotlin.time.ExperimentalTime
 
 @Service
@@ -54,16 +55,6 @@ class DiscordService(
     }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {
-        // FIXME: hack to prevent channel switch to timeout
-        // First "join" works, but then any subsequent "join" will not emit in the Mono returned by Discord4J
-        //  - Only leaving the channel without closing the session still times out
-        //  - Only closing the session without leaving the channel still times out
-        try {
-            leave(guildId)
-        } catch (e: Exception) {
-        }
-        getSession().close()
-
         val audioProvider = audioService.registerGuild(guildId)
         val voiceConnection = getSession().join(guildId, channelId, audioProvider)
         connections[guildId] = voiceConnection
@@ -71,9 +62,9 @@ class DiscordService(
 
     suspend fun leave(guildId: Snowflake) {
         val connection = connections[guildId] ?: error("No channel to leave in guild $guildId")
-        connection.disconnect()
         connections.remove(guildId)
         audioService.unregisterGuild(guildId)
+        connection.disconnect().awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
     }
 
     // FIXME use ChannelResult instead of boolean to provide the current channel name to UI and allow to leave via channel ID
