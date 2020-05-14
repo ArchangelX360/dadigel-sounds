@@ -25,7 +25,6 @@ export interface BotStatus {
 
 export enum BotState {
   OFFLINE,
-  LOGGED_IN,
   JOINED_IDLE,
   PLAYING
 }
