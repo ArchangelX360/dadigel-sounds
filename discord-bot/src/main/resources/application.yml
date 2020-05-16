@@ -5,7 +5,7 @@ discord:
 sounds:
   folder: /opt/sounds
   # FIXME: DB storage or a manifest file would be a better option here
-  # mappingManiest: /opt/sounds/manifest.yaml
+  # mappingManfiest: /opt/sounds/manifest.yaml
   mappings:
     - filename: abuse.mp3
       displayName: "Abusé"
