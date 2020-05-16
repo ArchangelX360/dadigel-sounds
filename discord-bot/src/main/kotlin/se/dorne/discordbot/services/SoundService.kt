@@ -27,8 +27,8 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     private lateinit var fileWatcher: WatchService
     private lateinit var soundFolderKey: WatchKey
 
-    private lateinit var mutableFilenames: MutableStateFlow<Set<String>>
-    private final val filenames: StateFlow<Set<String>>
+    private val mutableFilenames: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
+    private val filenames: StateFlow<Set<String>> = mutableFilenames
 
     init {
         try {
@@ -39,13 +39,11 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
                     .register(fileWatcher,
                             StandardWatchEventKinds.ENTRY_CREATE,
                             StandardWatchEventKinds.ENTRY_DELETE)
-            mutableFilenames = MutableStateFlow(listSoundFiles(soundFolder))
+            mutableFilenames.value = listSoundFiles(soundFolder)
             startIn(scope)
         } catch (e: NoSuchFileException) {
             logger.error("could not find folder ${soundsConfiguration.folder}")
-            mutableFilenames = MutableStateFlow(emptySet())
         }
-        filenames = mutableFilenames
     }
 
     fun getSounds(): Flow<Set<SoundResponse>> {
@@ -62,7 +60,11 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     private fun listSoundFiles(folder: File): Set<String> {
         return folder
                 .listFiles { _, name -> name.hasSupportedExtension() }
-                ?.map { it.name }?.toSet() ?: emptySet()
+                ?.map {
+                    logger.info("found file ${it.name}")
+                    it.name
+                }
+                ?.toSet() ?: emptySet()
     }
 
     @OptIn(ExperimentalTime::class)
@@ -74,7 +76,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
                     val watchKey = fileWatcher.take()
                     watchKey.pollEvents()
                             .filterPathEvents()
-                            .map { mutableFilenames.value = mutableFilenames.value.updatedBy(it) }
+                            .forEach { mutableFilenames.value = mutableFilenames.value.updatedBy(it) }
 
                     if (!watchKey.reset()) {
                         watchKey.cancel()
@@ -89,7 +91,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     }
 
     private fun String.hasSupportedExtension(): Boolean {
-        return supportedExtensions.find { this.endsWith(it) } != null
+        return supportedExtensions.any { this.endsWith(it) }
     }
 
     private fun List<WatchEvent<*>>.filterPathEvents(): List<WatchEvent<Path>> =
