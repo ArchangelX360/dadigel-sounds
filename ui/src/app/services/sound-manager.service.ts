@@ -31,7 +31,7 @@ export class SoundManagerService {
     );
   }
 
-  getSounds(): Observable<Array<Sound>> {
+  getSounds(): Observable<Sound[]> {
     return this.discordService.getSounds();
   }
 }

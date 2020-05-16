@@ -10,7 +10,7 @@ import {Observable} from 'rxjs';
 })
 export class AppComponent {
   mainSectionId = 'main';
-  mainSection: Observable<string>;
+  readonly mainSection: Observable<string>;
 
   constructor(private router: Router) {
     this.mainSection = this.router.events.pipe(

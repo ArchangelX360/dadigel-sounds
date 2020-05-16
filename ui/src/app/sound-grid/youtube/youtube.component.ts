@@ -9,9 +9,6 @@ export class YoutubeComponent {
   @Output() selected = new EventEmitter<string>();
   youtubeLink: string | undefined;
 
-  constructor() {
-  }
-
   async onPlayOnDiscordClick() {
     this.selected.emit(this.youtubeLink);
   }

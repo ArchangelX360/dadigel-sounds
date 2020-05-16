@@ -1,10 +1,8 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy} from '@angular/core';
 import {Sound} from '../models/sound';
 import {SoundManagerService} from '../services/sound-manager.service';
-import {ActivatedRoute, Router} from '@angular/router';
-import {from, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import {Connection} from '../models/discord';
-import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
@@ -12,66 +10,30 @@ import {MatSnackBar} from '@angular/material/snack-bar';
   templateUrl: './sound-grid.component.html',
   styleUrls: ['./sound-grid.component.scss'],
 })
-export class SoundGridComponent implements OnInit, OnDestroy {
-  sounds: Observable<Array<Sound>>;
-  readonly soundQueryParamKey = 'play_sound';
+export class SoundGridComponent implements OnDestroy {
+  readonly sounds$: Observable<Sound[]> = this.soundManager.getSounds();
   private subscriptions: Subscription[] = [];
-  private readonly initSound: string | undefined;
-  private activeConnection: Connection | undefined;
+  private activeConnection$: BehaviorSubject<Connection | null> = new BehaviorSubject(
+    null,
+  );
 
   constructor(
     private soundManager: SoundManagerService,
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
     private snackbar: MatSnackBar,
   ) {
-    this.sounds = this.soundManager.getSounds();
-    this.initSound = this.activatedRoute.snapshot.queryParamMap.get(
-      this.soundQueryParamKey,
-    );
   }
 
-  async ngOnInit() {
-    if (this.initSound) {
-      this.subscriptions.push(
-        this.soundManager
-          .playSound(
-            this.initSound,
-            this.activeConnection?.guild,
-          )
-          .subscribe(
-            result => console.log(result),
-            err => this.handleError(err),
-          ),
-      );
-    }
-  }
-
-  onConnection(connection: Connection | undefined) {
-    this.activeConnection = connection;
+  onConnection(connection: Connection | null) {
+    this.activeConnection$.next(connection);
   }
 
   async onSoundSelected(soundIdentifier: string) {
     this.subscriptions.push(
       this.soundManager
-        .playSound(
-          soundIdentifier,
-          this.activeConnection?.guild,
-        )
-        .pipe(
-          tap(() =>
-            from(
-              this.router.navigate([], {
-                relativeTo: this.activatedRoute,
-                queryParams: {
-                  [this.soundQueryParamKey]: soundIdentifier,
-                },
-              }),
-            ),
-          ),
-        )
+        .playSound(soundIdentifier, this.activeConnection$.value?.guild)
         .subscribe(
-          result => console.log(result),
+          () => {
+          },
           err => this.handleError(err),
         ),
     );

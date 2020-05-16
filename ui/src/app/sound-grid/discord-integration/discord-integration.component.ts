@@ -1,7 +1,7 @@
-import {Component, EventEmitter, OnDestroy, Output} from '@angular/core';
-import {map, tap} from 'rxjs/operators';
+import {Component, OnDestroy, Output} from '@angular/core';
+import {filter, flatMap, map, tap} from 'rxjs/operators';
+import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import {Channel, Connection, Guild, TrackInfo} from '../../models/discord';
-import {Observable, Subscription} from 'rxjs';
 import {DiscordService} from '../../services/discord.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
@@ -11,66 +11,103 @@ import {MatSnackBar} from '@angular/material/snack-bar';
   styleUrls: ['./discord-integration.component.scss'],
 })
 export class DiscordIntegrationComponent implements OnDestroy {
-  @Output() connection = new EventEmitter<Connection>();
-  guilds: Observable<Array<Guild>>;
-  channels: Observable<Array<Channel>>;
-  selectedGuild: Guild;
-  selectedChannel: Channel;
+  @Output()
+  readonly connection: BehaviorSubject<Connection | null> = new BehaviorSubject(
+    null,
+  );
+  readonly guilds$: Observable<Guild[]>;
+  readonly channels$: Observable<Channel[]>;
+  readonly playingTrack$: Observable<TrackInfo | null>;
 
-  joinedChannel: Observable<Channel | null>;
-  playingTrack: Observable<TrackInfo | null>;
-
-  // FIXME: transform into an Observable to handle connection drops
-  activeConnection: Connection | undefined;
+  selectedGuild: Guild | null;
+  selectedChannel: Channel | null;
+  joinedChannel: Channel | null;
+  loading = false;
 
   private subscriptions: Subscription[] = [];
+
+  private readonly selectedGuild$: BehaviorSubject<Guild | null> = new BehaviorSubject(
+    null,
+  );
+  private readonly selectedChannel$: BehaviorSubject<Channel | null> = new BehaviorSubject(
+    null,
+  );
+  private readonly joinedChannel$: Observable<Channel | null>;
 
   constructor(
     private discordService: DiscordService,
     private snackbar: MatSnackBar,
   ) {
-    this.guilds = this.discordService.getGuilds();
+    this.guilds$ = this.discordService.getGuilds();
+    this.channels$ = this.selectedGuild$.pipe(
+      flatMap(g => this.discordService.getChannels(g.id)),
+    );
+
+    const botStatus$ = this.selectedGuild$.pipe(
+      filter(g => g !== null),
+      flatMap(g => this.discordService.getStatus(g.id)),
+      tap(s => console.log('Bot status: ', s)),
+    );
+    this.joinedChannel$ = botStatus$.pipe(map(bs => bs.joinedChannel));
+    this.playingTrack$ = botStatus$.pipe(map(bs => bs.playingTrack));
+
+    // these subscriptions are made without "| async" to avoid
+    // multi-subscription in the template
+    this.subscriptions.push(
+      this.joinedChannel$.subscribe(jc => (this.joinedChannel = jc)),
+    );
+    this.subscriptions.push(
+      this.selectedGuild$.subscribe(g => (this.selectedGuild = g)),
+    );
+    this.subscriptions.push(
+      this.selectedChannel$.subscribe(c => (this.selectedChannel = c)),
+    );
   }
 
   selectGuild(g: Guild) {
-    this.selectedGuild = g;
-    this.channels = this.discordService.getChannels(g.id);
-
-    const botStatus = this.discordService.getStatus(g.id).pipe(tap(s => console.log('Bot status: ', s)));
-    this.joinedChannel = botStatus.pipe(map((bs, _) => bs.joinedChannel));
-    this.playingTrack = botStatus.pipe(map((bs, _) => bs.playingTrack));
+    this.selectedGuild$.next(g);
   }
 
-  joinChannel(guild: Guild, channel: Channel) {
-    this.subscriptions.push(
-      this.discordService.joinChannel(guild.id, channel.id).subscribe(
-        () => {
-          this.activeConnection = {guild, channel};
-          this.connection.emit(this.activeConnection);
-        },
-        httpError =>
-          this.handleError('failed to join channel in Discord', httpError),
-      ),
-    );
+  selectChannel(c: Channel) {
+    this.selectedChannel$.next(c);
   }
 
-  leaveChannel(guild: Guild) {
-    this.subscriptions.push(
-      this.discordService.leaveChannel(guild.id).subscribe(
-        () => {
-          this.activeConnection = undefined;
-          this.connection.emit(this.activeConnection);
-        },
-        httpError =>
-          this.handleError('failed to leave channel in Discord', httpError),
-      ),
-    );
+  joinChannel() {
+    this.loading = true;
+    const guild = this.selectedGuild;
+    const channel = this.selectedChannel;
+    if (guild && channel) {
+      this.subscriptions.push(
+        this.discordService
+          .joinChannel(guild.id, channel.id)
+          .pipe(tap(() => (this.loading = false)))
+          .subscribe(
+            () => this.connection.next({guild, channel}),
+            httpError =>
+              this.handleError('failed to join channel in Discord', httpError),
+          ),
+      );
+    }
+  }
+
+  leaveChannel() {
+    this.loading = true;
+    const guild = this.selectedGuild;
+    if (guild) {
+      this.subscriptions.push(
+        this.discordService
+          .leaveChannel(guild.id)
+          .pipe(tap(() => (this.loading = false)))
+          .subscribe(
+            () => this.connection.next(null),
+            httpError =>
+              this.handleError('failed to leave channel in Discord', httpError),
+          ),
+      );
+    }
   }
 
   ngOnDestroy(): void {
-    if (this.activeConnection && this.selectedGuild) {
-      this.leaveChannel(this.selectedGuild);
-    }
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 

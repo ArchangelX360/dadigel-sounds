@@ -3,36 +3,54 @@
     <mat-card-content>
         <mat-form-field>
             <mat-label>Guilds</mat-label>
-            <mat-select (ngModelChange)="selectGuild($event)" [ngModel]="selectedGuild">
-                <mat-option *ngFor="let g of guilds | async" [value]="g">
+            <mat-select
+                    (ngModelChange)="selectGuild($event)"
+                    [ngModel]="selectedGuild">
+                <mat-option
+                        *ngFor="let g of guilds$ | async"
+                        [value]="g">
                     {{g.name}} ({{g.id}})
                 </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field *ngIf="selectedGuild">
             <mat-label>Channels</mat-label>
-            <mat-select [(ngModel)]="selectedChannel">
-                <mat-option *ngFor="let c of channels | async" [value]="c">
+            <mat-select
+                    (ngModelChange)="selectChannel($event)"
+                    [ngModel]="selectedChannel">
+                <mat-option
+                        *ngFor="let c of channels$ | async"
+                        [value]="c">
                     {{c.name}} ({{c.id}})
                 </mat-option>
             </mat-select>
         </mat-form-field>
         <button
-                (click)="joinChannel(selectedGuild, selectedChannel)"
-                *ngIf="selectedGuild && selectedChannel && ((joinedChannel | async)?.id != selectedChannel.id)"
+                (click)="joinChannel()"
+                *ngIf="selectedGuild && selectedChannel && joinedChannel?.id != selectedChannel.id"
+                [disabled]="loading"
                 color="primary"
                 mat-raised-button>
             Join {{selectedChannel.name}}
         </button>
-        <button (click)="leaveChannel(selectedGuild)"
-                *ngIf="selectedGuild && (joinedChannel | async) as chan"
+        <button
+                (click)="leaveChannel()"
+                *ngIf="selectedGuild && joinedChannel"
+                [disabled]="loading"
                 color="warn"
                 mat-button>
-            Leave {{chan?.name}} ({{selectedGuild.name}})
+            Leave {{joinedChannel.name}} ({{selectedGuild.name}})
         </button>
-        <mat-form-field *ngIf="playingTrack | async as track">
+        <mat-spinner
+                *ngIf="loading"
+                [diameter]="20"></mat-spinner>
+        <mat-form-field
+                *ngIf="playingTrack$ | async as track">
             <mat-label>Now playing</mat-label>
-            <input [value]="track.title" disabled matInput>
+            <input
+                    [value]="track.title"
+                    disabled
+                    matInput>
         </mat-form-field>
     </mat-card-content>
 </mat-card>

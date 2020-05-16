@@ -14,6 +14,7 @@ import {FormsModule} from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
 import {YoutubeComponent} from './youtube/youtube.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import {YoutubeComponent} from './youtube/youtube.component';
     CommonModule,
     SoundGridRoutingModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     MatInputModule,
     MatCardModule,
     HttpClientModule,
