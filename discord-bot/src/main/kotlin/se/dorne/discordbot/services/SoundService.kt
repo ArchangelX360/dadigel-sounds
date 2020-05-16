@@ -13,35 +13,39 @@ import se.dorne.discordbot.configurations.SoundMapping
 import se.dorne.discordbot.configurations.SoundsConfiguration
 import se.dorne.discordbot.models.SoundResponse
 import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Path
-import java.nio.file.StandardWatchEventKinds
-import java.nio.file.WatchEvent
+import java.nio.file.*
 import kotlin.time.ExperimentalTime
 
 @Service
 @OptIn(ExperimentalCoroutinesApi::class)
 class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     private val scope = CoroutineScope(Job() + CoroutineName("sounds-watcher"))
-
-    private val mutableFilenames: MutableStateFlow<Set<String>> = MutableStateFlow(listFiles(soundsConfiguration.folder))
-
-    val filenames: StateFlow<Set<String>> = mutableFilenames
-
-    final val fileWatcher = FileSystems.getDefault().newWatchService()
-
     private var watchJob: Job? = null
 
-    val soundFolder = File(soundsConfiguration.folder)
-            .toPath()
-            .register(fileWatcher,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE)
+    private lateinit var soundFolder: File
+    private lateinit var fileWatcher: WatchService
+    private lateinit var soundFolderKey: WatchKey
+
+    private lateinit var mutableFilenames: MutableStateFlow<Set<String>>
+    private final val filenames: StateFlow<Set<String>>
 
     init {
-        startIn(scope)
+        try {
+            soundFolder = File(soundsConfiguration.folder)
+            fileWatcher = FileSystems.getDefault().newWatchService()
+            soundFolderKey = soundFolder
+                    .toPath()
+                    .register(fileWatcher,
+                            StandardWatchEventKinds.ENTRY_CREATE,
+                            StandardWatchEventKinds.ENTRY_DELETE)
+            mutableFilenames = MutableStateFlow(listSoundFiles(soundFolder))
+            startIn(scope)
+        } catch (e: NoSuchFileException) {
+            logger.error("could not find folder ${soundsConfiguration.folder}")
+            mutableFilenames = MutableStateFlow(emptySet())
+        }
+        filenames = mutableFilenames
     }
-
 
     fun getSounds(): Flow<Set<SoundResponse>> {
         return filenames.map { sds ->
@@ -54,8 +58,8 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
         return SoundResponse(mapping?.filename ?: this, mapping?.displayName)
     }
 
-    private fun listFiles(folder: String): Set<String> {
-        return File(folder)
+    private fun listSoundFiles(folder: File): Set<String> {
+        return folder
                 .listFiles { _, name -> name.endsWith(".mp3") }
                 ?.map { it.name }?.toSet() ?: emptySet()
     }
@@ -78,7 +82,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
                     }
                 }
 
-                soundFolder.cancel()
+                soundFolderKey.cancel()
             }
         }
     }
