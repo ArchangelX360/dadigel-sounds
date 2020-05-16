@@ -22,6 +22,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     private val scope = CoroutineScope(Job() + CoroutineName("sounds-watcher"))
     private var watchJob: Job? = null
 
+    private val supportedExtensions = setOf(".mp3")
     private lateinit var soundFolder: File
     private lateinit var fileWatcher: WatchService
     private lateinit var soundFolderKey: WatchKey
@@ -60,7 +61,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
 
     private fun listSoundFiles(folder: File): Set<String> {
         return folder
-                .listFiles { _, name -> name.endsWith(".mp3") }
+                .listFiles { _, name -> name.hasSupportedExtension() }
                 ?.map { it.name }?.toSet() ?: emptySet()
     }
 
@@ -87,6 +88,10 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
         }
     }
 
+    private fun String.hasSupportedExtension(): Boolean {
+        return supportedExtensions.find { this.endsWith(it) } != null
+    }
+
     private fun List<WatchEvent<*>>.filterPathEvents(): List<WatchEvent<Path>> =
             filter {
                 it.kind().type() == Path::class.java
@@ -99,13 +104,23 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
         when (e.kind().name()) {
             StandardWatchEventKinds.ENTRY_CREATE.name() -> {
                 val filename = e.context().fileName.toString()
-                logger.info("file created $filename")
-                return this.plus(filename)
+                return if (filename.hasSupportedExtension()) {
+                    logger.info("file created $filename")
+                    this.minus(filename)
+                } else {
+                    logger.warn("ignoring creation of $filename")
+                    this
+                }
             }
             StandardWatchEventKinds.ENTRY_DELETE.name() -> {
                 val filename = e.context().fileName.toString()
-                logger.info("file deleted $filename")
-                return this.minus(filename)
+                return if (filename.hasSupportedExtension()) {
+                    logger.info("file deleted $filename")
+                    this.minus(filename)
+                } else {
+                    logger.warn("ignoring deletion of $filename")
+                    this
+                }
             }
             else -> {
                 logger.warn("ignored event $e")
