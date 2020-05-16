@@ -4,6 +4,8 @@ discord:
 
 sounds:
   folder: /opt/sounds
+  supportedExtensions:
+    - ".mp3"
   # FIXME: DB storage or a manifest file would be a better option here
   # mappingManfiest: /opt/sounds/manifest.yaml
   mappings:

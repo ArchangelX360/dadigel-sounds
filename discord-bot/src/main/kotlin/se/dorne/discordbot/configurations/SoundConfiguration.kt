@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
 class SoundsConfiguration {
     lateinit var folder: String
     lateinit var mappings: List<SoundMapping>
+    lateinit var supportedExtensions: Set<String>
 }
 
 class SoundMapping {

@@ -22,7 +22,6 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     private val scope = CoroutineScope(Job() + CoroutineName("sounds-watcher"))
     private var watchJob: Job? = null
 
-    private val supportedExtensions = setOf(".mp3")
     private lateinit var soundFolder: File
     private lateinit var fileWatcher: WatchService
     private lateinit var soundFolderKey: WatchKey
@@ -91,7 +90,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
     }
 
     private fun String.hasSupportedExtension(): Boolean {
-        return supportedExtensions.any { this.endsWith(it) }
+        return soundsConfiguration.supportedExtensions.any { this.endsWith(it) }
     }
 
     private fun List<WatchEvent<*>>.filterPathEvents(): List<WatchEvent<Path>> =
