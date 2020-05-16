@@ -11,16 +11,16 @@ import {MatSnackBar} from '@angular/material/snack-bar';
   styleUrls: ['./sound-grid.component.scss'],
 })
 export class SoundGridComponent implements OnDestroy {
-  readonly sounds$: Observable<Sound[]> = this.soundManager.getSounds();
   private subscriptions: Subscription[] = [];
-  private activeConnection$: BehaviorSubject<Connection | null> = new BehaviorSubject(
-    null,
-  );
+  readonly sounds$: Observable<Sound[]>;
+  private activeConnection$: BehaviorSubject<Connection | null>;
 
   constructor(
     private soundManager: SoundManagerService,
     private snackbar: MatSnackBar,
   ) {
+    this.sounds$ = this.soundManager.getSounds();
+    this.activeConnection$ = new BehaviorSubject(null);
   }
 
   onConnection(connection: Connection | null) {
@@ -32,8 +32,7 @@ export class SoundGridComponent implements OnDestroy {
       this.soundManager
         .playSound(soundIdentifier, this.activeConnection$.value?.guild)
         .subscribe(
-          () => {
-          },
+          m => console.log(m),
           err => this.handleError(err),
         ),
     );
