@@ -30,7 +30,9 @@
                 mat-button>
             Leave {{chan?.name}} ({{selectedGuild.name}})
         </button>
-        <!-- FIXME move it to another component? -->
-        <mat-label *ngIf="playingTrack | async as track">Now playing: {{track.title}}</mat-label>
+        <mat-form-field *ngIf="playingTrack | async as track">
+            <mat-label>Now playing</mat-label>
+            <input [value]="track.title" disabled matInput>
+        </mat-form-field>
     </mat-card-content>
 </mat-card>
