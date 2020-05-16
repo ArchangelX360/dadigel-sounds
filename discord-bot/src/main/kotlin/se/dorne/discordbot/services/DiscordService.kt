@@ -3,13 +3,7 @@ package se.dorne.discordbot.services
 import discord4j.core.DiscordClient
 import discord4j.rest.util.Snowflake
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -19,14 +13,7 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import se.dorne.discordbot.configurations.DiscordConfiguration
-import se.dorne.discordbot.models.BotState
-import se.dorne.discordbot.models.BotStatus
-import se.dorne.discordbot.models.ChannelResult
-import se.dorne.discordbot.models.GuildResult
-import se.dorne.discordbot.models.TrackInfo
-import se.dorne.discordbot.models.toChannelResults
-import se.dorne.discordbot.models.toGuildResults
-import se.dorne.discordbot.models.toResult
+import se.dorne.discordbot.models.*
 import kotlin.time.ExperimentalTime
 
 @Service
@@ -65,15 +52,15 @@ class DiscordService(
     //  prevent #2 without solving #3.
     //  Another option would be to auto-reconnect as long as there is a subscriber, but this would be a waste if
     //  someone just leaves his browser open forever.
-    fun listGuilds(): Flow<List<GuildResult>> = session.onStart { ensureConnected() }
-        .flatMapLatest {
-            it?.watchGuilds()?.map { guilds -> guilds.toGuildResults() } ?: MutableStateFlow(emptyList())
-        }
+    fun listGuilds(): Flow<List<GuildResponse>> = session.onStart { ensureConnected() }
+            .flatMapLatest {
+                it?.watchGuilds()?.map { guilds -> guilds.toGuildResponses() } ?: MutableStateFlow(emptyList())
+            }
 
-    fun listChannels(guildId: Snowflake): Flow<List<ChannelResult>> = session.onStart { ensureConnected() }
-        .flatMapLatest {
-            it?.watchChannels(guildId)?.map { channels -> channels.toChannelResults() } ?: emptyFlow()
-        }
+    fun listChannels(guildId: Snowflake): Flow<List<ChannelResponse>> = session.onStart { ensureConnected() }
+            .flatMapLatest {
+                it?.watchChannels(guildId)?.map { channels -> channels.toChannelResponses() } ?: emptyFlow()
+            }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {
         val audioProvider = audioService.registerGuild(guildId)
@@ -90,23 +77,23 @@ class DiscordService(
     fun botStatus(guildId: Snowflake): Flow<BotStatus> {
         val playingTrack = audioService.watchPlayingTrack(guildId)
         val joinedChannel = session.onStart { ensureConnected() }
-            .flatMapLatest { it?.watchedJoinedChannel(guildId) ?: emptyFlow() }
-            .map { it?.toResult() }
+                .flatMapLatest { it?.watchedJoinedChannel(guildId) ?: emptyFlow() }
+                .map { it?.toResponse() }
         return joinedChannel.combine(playingTrack) { channel, track ->
             computeBotStatus(channel, track)
         }
     }
 
-    private fun computeBotStatus(channel: ChannelResult?, playingTrackInfo: TrackInfo?): BotStatus {
+    private fun computeBotStatus(channel: ChannelResponse?, playingTrackInfo: TrackInfo?): BotStatus {
         val state = when {
             playingTrackInfo != null -> BotState.PLAYING
             channel != null -> BotState.JOINED_IDLE
             else -> BotState.OFFLINE
         }
         return BotStatus(
-            state = state,
-            joinedChannel = channel,
-            playingTrack = playingTrackInfo
+                state = state,
+                joinedChannel = channel,
+                playingTrack = playingTrackInfo
         )
     }
 

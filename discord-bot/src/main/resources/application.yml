@@ -1,0 +1,217 @@
+discord:
+  bot:
+    token: "something"
+
+sounds:
+  folder: /opt/sounds
+  # FIXME: DB storage or a manifest file would be a better option here
+  # mappingManiest: /opt/sounds/manifest.yaml
+  mappings:
+    - filename: abuse.mp3
+      displayName: "Abusé"
+    - filename: ahnonmecjaccepteplustousca.mp3
+      displayName: "Ah non mec, j'accepte plus tous ça!"
+    - filename: alleraplus.mp3
+      displayName: "Aller à plus"
+    - filename: bataard.mp3
+      displayName: "Bâtard"
+    - filename: bordeldemerde.mp3
+      displayName: "Bordel de merde"
+    - filename: bravoleveau.mp3
+      displayName: "Bravo le veau"
+    - filename: breath.mp3
+      displayName: "Breath"
+    - filename: cestlafolie.mp3
+      displayName: "C'est la folie!"
+    - filename: cestmoibonjourvousallezbien.mp3
+      displayName: "C'est moi, bonjour, vous allez-bien?"
+    - filename: cestpaslafolie.mp3
+      displayName: "C'est pas la folie!"
+    - filename: cesttellementeasyquoi.mp3
+      displayName: "C'est tellement easy quoi"
+    - filename: connard.mp3
+      displayName: "Connard"
+    - filename: connarddemerde.mp3
+      displayName: "Connard de merde"
+    - filename: dequoi.mp3
+      displayName: "De quoi?"
+    - filename: desdoigtsdanslecul.mp3
+      displayName: "Des doigts dans le CUL"
+    - filename: ellechauffetropla.mp3
+      displayName: "Elle chauffe trop là"
+    - filename: etouaimec.mp3
+      displayName: "Et ouai mec"
+    - filename: etouiouiouiiijegagne.mp3.mp3
+      displayName: "Et oui oui ouiii je gagne!"
+    - filename: Euuhmetuepas.mp3
+      displayName: "Euuh, me tue pas"
+    - filename: fdp.mp3
+      displayName: "Fils de pute"
+    - filename: filsdechienva.mp3
+      displayName: "Fils de chien va"
+    - filename: fredonner.mp3
+      displayName: "Fredonner"
+    - filename: fuckyou.mp3
+      displayName: "Fuck you"
+    - filename: gogogo.mp3
+      displayName: "Go Go Go"
+    - filename: ilperdpasdeviie.mp3
+      displayName: "Il perd pas de vie"
+    - filename: jaifaisdelamerde.mp3
+      displayName: "J'ai fais de la merde! (mélodique)"
+    - filename: jaifaisdelamerde2.mp3
+      displayName: "J'ai fais de la merde! (lutin)"
+    - filename: jefaisdelamerde.mp3
+      displayName: "Je fais de la merde"
+    - filename: jemecassewesh.mp3
+      displayName: "Je me casse wesh"
+    - filename: jesucksduponeyquoi.mp3
+      displayName: "Je sucks du poney quoi"
+    - filename: jesuckstellementunmaxquoi.mp3.mp3
+      displayName: "Je sucks tellement un max quoi!"
+    - filename: jesuisdesolemec.mp3
+      displayName: "Je suis désolé mec"
+    - filename: jesuismort.mp3
+      displayName: "Mort, je suis mort (melodique)"
+    - filename: jesuistellementdesole.mp3.mp3
+      displayName: "Je suis tellement désolé !"
+    - filename: jesuistellementdesolepourtoiquoi.mp3.mp3
+      displayName: "Je suis tellement désolé pour toi quoi"
+    - filename: jesuisterrifiequoi.mp3
+      displayName: "Je suis terrifié quoi"
+    - filename: jetabandonnecommeunemerde.mp3
+      displayName: "Je t'abandonne comme une merde"
+    - filename: jfaisdelamerde.mp3
+      displayName: "De la merde"
+    - filename: jfaisdelamerde2.mp3
+      displayName: "J'fais de la merde"
+    - filename: jsuismortjsuismort.mp3.mp3
+      displayName: "Je suis mort, je suis mort !"
+    - filename: maaabienjouemec.mp3
+      displayName: "Maaah bien joué mec"
+    - filename: mec.mp3
+      displayName: "Mec"
+    - filename: merci.mp3
+      displayName: "Merci"
+    - filename: mescouilles.mp3
+      displayName: "Mes couilles, mes couilles"
+    - filename: mettonsnousaportee.mp3.mp3
+      displayName: "Mettons nous à portée (lutin)"
+    - filename: mettonsnousaportee2.mp3.mp3
+      displayName: "Mettons nous à portée 2 (lutin)"
+    - filename: NICE.mp3
+      displayName: "Nice"
+    - filename: niquetamere.mp3
+      displayName: "Nique ta mère"
+    - filename: niquetameresteuplait.mp3.mp3
+      displayName: "Nique ta mère steu plait"
+    - filename: niveaugagneee.mp3
+      displayName: "Niveau gagnééé"
+    - filename: non.mp3
+      displayName: "Non"
+    - filename: nonmecjaiarretejaiarrete.mp3
+      displayName: "Non mec j'ai arrêté, j'ai arrêté"
+    - filename: oh.mp3
+      displayName: "Oh"
+    - filename: ohilperdtellementpasdeviiiieperdpasdevie.mp3.mp3
+      displayName: "Oh il perd tellement pas de viiie, perd pas de vie"
+    - filename: ohjemesuisfaisrape.mp3
+      displayName: "Oh je me suis fait rape"
+    - filename: ohlavaaache.mp3
+      displayName: "Oh la vaaache"
+    - filename: ohlavachequoi.mp3
+      displayName: "Oh la vache quoi"
+    - filename: ohmerde.mp3
+      displayName: "Oh merde"
+    - filename: ohyeahyeahyeahyeah.mp3
+      displayName: "Oh yeah yeah yeah yeah"
+    - filename: onestplutotcontent.mp3
+      displayName: "On est plutôt content"
+    - filename: onesttellementtristela.mp3.mp3
+      displayName: "On est tellement triste là"
+    - filename: ontedeteste.mp3
+      displayName: "On te déteste"
+    - filename: onvatetuer.mp3
+      displayName: "On va te tuer"
+    - filename: ooohhh.mp3
+      displayName: "Ooohhh"
+    - filename: ooohmerde.mp3
+      displayName: "Oooh meeerde"
+    - filename: Ooohoh.mp3
+      displayName: "Oooh oh ! (peur)"
+    - filename: ooooui.mp3
+      displayName: "Ooooui (jouissance)"
+    - filename: ouh.mp3
+      displayName: "Ouh (extase)"
+    - filename: pacebook.mp3
+      displayName: "Pacebook"
+    - filename: parpitie.mp3
+      displayName: "Par pitié"
+    - filename: pitie.mp3
+      displayName: "Pitié"
+    - filename: pitie2.mp3
+      displayName: "Pitié 2"
+    - filename: pleurs.mp3
+      displayName: "Pleurs"
+    - filename: prendtapotionfilsdepute.mp3.mp3
+      displayName: "Prend ta potion fils de pute (mélodique)"
+    - filename: ptainjemesuisfaiseclate.mp3.mp3
+      displayName: "Ptain je me suis fait éclater"
+    - filename: ptaintumangestellementdesbites.mp3.mp3
+      displayName: "Ptain tu manges tellement des bites"
+    - filename: puckyoudanslesfesses.mp3.mp3
+      displayName: "Puck you dans les fesses"
+    - filename: questcequetuveuxfaire.mp3
+      displayName: "Qu'est ce que tu veux faire"
+    - filename: rire.mp3
+      displayName: "Rire"
+    - filename: rire2.mp3
+      displayName: "Rire 2"
+    - filename: rire3.mp3
+      displayName: "Rire 3"
+    - filename: rire4.mp3
+      displayName: "Rire 4"
+    - filename: rire5.mp3
+      displayName: "Rire 5"
+    - filename: rire6.mp3
+      displayName: "Rire 6"
+    - filename: rireohmec.mp3
+      displayName: "Rire, oh mec"
+    - filename: serieux.mp3
+      displayName: "Sérieux ?"
+    - filename: sijedeconnectecestnormalejauraiexplose.mp3
+      displayName: "Si je déconnecte c'est normal, j'aurai explosé"
+    - filename: tainjesucksacejevideo.mp3
+      displayName: "'Tain je sucks à ce jeu vidéo"
+    - filename: tainjesuiscon.mp3
+      displayName: "'Tain je suis con"
+    - filename: taintaintesundingue.mp3
+      displayName: "'Tain 'tain t'es un dingue"
+    - filename: terrifiemongars.mp3
+      displayName: "Terrifié mon gars"
+    - filename: tesoufouquoi.mp3
+      displayName: "T'es ouf ou quoi"
+    - filename: tespasobligedevenir.mp3
+      displayName: "T'es pas obligé de venir, t'es pas obligé de venir"
+    - filename: testellementtriste.mp3
+      displayName: "T'es tellement triste"
+    - filename: tupeuxrienfairequoi.mp3
+      displayName: "Tu peux rien faire quoi"
+    - filename: tuvasfairequoi.mp3
+      displayName: "Tu vas faire quoi"
+    - filename: tuveuxdesboulettes.mp3
+      displayName: "Tu veux des boulettes ?"
+    - filename: tuveuxdesboulettesbatard.mp3.mp3
+      displayName: "Tu veux des boulettes bâtard ?!"
+    - filename: vousvoulezvoirlefeudartifice.mp3
+      displayName: "Vous voulez voir le feu d'artifice ?"
+    - filename: WHAAAT.mp3
+      displayName: "WHAAAT"
+    - filename: what.mp3
+      displayName: "What"
+    - filename: whatdoyouwanttodo.mp3
+      displayName: "What do you want to do ?"
+    - filename: whatwhatwhat.mp3
+      displayName: "What what what"
+    - filename: yeah.mp3
+      displayName: "Yeeeah"

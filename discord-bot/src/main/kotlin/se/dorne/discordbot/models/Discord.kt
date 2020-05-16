@@ -3,29 +3,29 @@ package se.dorne.discordbot.models
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
 
-class GuildResult(
+class GuildResponse(
         val id: String,
         val name: String
 ) {
-    override fun equals(other: Any?): Boolean = other is GuildResult && this.id == other.id
+    override fun equals(other: Any?): Boolean = other is GuildResponse && this.id == other.id
 
     override fun hashCode(): Int = id.hashCode()
 }
 
-data class ChannelResult(val id: String, val name: String)
+data class ChannelResponse(val id: String, val name: String)
 
-fun List<Guild>.toGuildResults() = map { it.toResult() }
+fun List<Guild>.toGuildResponses() = map { it.toResponse() }
 
-fun Guild.toResult() = GuildResult(id.asString(), name)
+fun Guild.toResponse() = GuildResponse(id.asString(), name)
 
-fun List<VoiceChannel>.toChannelResults() = map { it.toResult() }
+fun List<VoiceChannel>.toChannelResponses() = map { it.toResponse() }
 
-fun VoiceChannel.toResult() = ChannelResult(id.asString(), name)
+fun VoiceChannel.toResponse() = ChannelResponse(id.asString(), name)
 
 data class BotStatus(
-    val state: BotState,
-    val joinedChannel: ChannelResult?,
-    val playingTrack: TrackInfo?
+        val state: BotState,
+        val joinedChannel: ChannelResponse?,
+        val playingTrack: TrackInfo?
 )
 
 enum class BotState {

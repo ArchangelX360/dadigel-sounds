@@ -1,4 +1,4 @@
 export interface Sound {
-  tileName: string;
-  fileName: string;
+  displayName: string;
+  filename: string;
 }

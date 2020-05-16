@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import se.dorne.discordbot.models.BotStatus
-import se.dorne.discordbot.models.ChannelResult
-import se.dorne.discordbot.models.GuildResult
+import se.dorne.discordbot.models.ChannelResponse
+import se.dorne.discordbot.models.GuildResponse
 import se.dorne.discordbot.services.DiscordService
 import kotlin.time.ExperimentalTime
 
@@ -18,11 +18,11 @@ class DiscordController(
 
     @OptIn(ExperimentalTime::class)
     @GetMapping("/guilds")
-    fun listGuilds(): Flow<List<GuildResult>> = discordService.listGuilds()
+    fun listGuilds(): Flow<List<GuildResponse>> = discordService.listGuilds()
 
     @OptIn(ExperimentalTime::class)
     @GetMapping("/guilds/{guildId}/channels")
-    fun listChannels(@PathVariable guildId: String): Flow<List<ChannelResult>> =
+    fun listChannels(@PathVariable guildId: String): Flow<List<ChannelResponse>> =
             discordService.listChannels(Snowflake.of(guildId))
 
     @OptIn(ExperimentalTime::class)
