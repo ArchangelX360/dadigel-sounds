@@ -70,6 +70,7 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
 
                     for (event in watchKey.pollEvents()) {
                         if (event.kind().type() == Path::class.java) {
+                            @Suppress("UNCHECKED_CAST")
                             mutableFilenames.value = mutableFilenames.value.updatedBy(event as WatchEvent<Path>)
                         }
                     }
