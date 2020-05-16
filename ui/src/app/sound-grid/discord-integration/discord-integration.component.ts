@@ -18,66 +18,62 @@ export class DiscordIntegrationComponent implements OnDestroy {
   readonly guilds$: Observable<Guild[]>;
   readonly channels$: Observable<Channel[]>;
 
-  selectedGuild: Guild | null;
-  selectedChannel: Channel | null;
+  selectedGuildId: string | null;
+  selectedChannelId: string | null;
   botStatus: BotStatus | null;
   loading = false;
 
   private subscriptions: Subscription[] = [];
 
-  private readonly selectedGuild$: BehaviorSubject<Guild | null> = new BehaviorSubject(
-    null,
-  );
-  private readonly selectedChannel$: BehaviorSubject<Channel | null> = new BehaviorSubject(
-    null,
-  );
+  private readonly selectedGuildId$: BehaviorSubject<string | null> = new BehaviorSubject(null);
+  private readonly selectedChannelId$: BehaviorSubject<string | null> = new BehaviorSubject(null);
 
   constructor(
     private discordService: DiscordService,
     private snackbar: MatSnackBar,
   ) {
     this.guilds$ = this.discordService.getGuilds();
-    this.channels$ = this.selectedGuild$.pipe(
-      flatMap(g => this.discordService.getChannels(g.id)),
+    this.channels$ = this.selectedGuildId$.pipe(
+      flatMap(gId => this.discordService.getChannels(gId)),
     );
 
     // these subscriptions are made without "| async" to avoid
     // multi-subscription in the template
     this.subscriptions.push(
-      this.selectedGuild$
+      this.selectedGuildId$
         .pipe(
-          filter(g => g !== null),
-          flatMap(g => this.discordService.getStatus(g.id)),
+          filter(gId => gId !== null),
+          flatMap(gId => this.discordService.getStatus(gId)),
         )
         .subscribe(b => (this.botStatus = b)),
     );
     this.subscriptions.push(
-      this.selectedGuild$.subscribe(g => (this.selectedGuild = g)),
+      this.selectedGuildId$.subscribe(gId => (this.selectedGuildId = gId)),
     );
     this.subscriptions.push(
-      this.selectedChannel$.subscribe(c => (this.selectedChannel = c)),
+      this.selectedChannelId$.subscribe(cId => (this.selectedChannelId = cId)),
     );
   }
 
-  selectGuild(g: Guild) {
-    this.selectedGuild$.next(g);
+  selectGuild(gId: string) {
+    this.selectedGuildId$.next(gId);
   }
 
-  selectChannel(c: Channel) {
-    this.selectedChannel$.next(c);
+  selectChannel(cId: string) {
+    this.selectedChannelId$.next(cId);
   }
 
   joinChannel() {
     this.loading = true;
-    const guild = this.selectedGuild;
-    const channel = this.selectedChannel;
-    if (guild && channel) {
+    const guildId = this.selectedGuildId;
+    const channelId = this.selectedChannelId;
+    if (guildId && channelId) {
       this.subscriptions.push(
         this.discordService
-          .joinChannel(guild.id, channel.id)
+          .joinChannel(guildId, channelId)
           .pipe(tap(() => (this.loading = false)))
           .subscribe(
-            () => this.connection.next({guild, channel}),
+            () => this.connection.next({guildId, channelId}),
             httpError =>
               this.handleError('failed to join channel in Discord', httpError),
           ),
@@ -87,11 +83,11 @@ export class DiscordIntegrationComponent implements OnDestroy {
 
   leaveChannel() {
     this.loading = true;
-    const guild = this.selectedGuild;
-    if (guild) {
+    const guildId = this.selectedGuildId;
+    if (guildId) {
       this.subscriptions.push(
         this.discordService
-          .leaveChannel(guild.id)
+          .leaveChannel(guildId)
           .pipe(tap(() => (this.loading = false)))
           .subscribe(
             () => this.connection.next(null),

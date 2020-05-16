@@ -9,8 +9,8 @@ export interface Guild {
 }
 
 export interface Connection {
-  guild: Guild;
-  channel: Channel;
+  guildId: string;
+  channelId: string;
 }
 
 export interface IsConnectedResponse {

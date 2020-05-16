@@ -30,7 +30,7 @@ export class SoundGridComponent implements OnDestroy {
   async onSoundSelected(soundIdentifier: string) {
     this.subscriptions.push(
       this.soundManager
-        .playSound(soundIdentifier, this.activeConnection$.value?.guild)
+        .playSound(soundIdentifier, this.activeConnection$.value?.guildId)
         .subscribe(
           m => console.log(m),
           err => this.handleError(err),

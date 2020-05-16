@@ -5,41 +5,41 @@
             <mat-label>Guilds</mat-label>
             <mat-select
                     (ngModelChange)="selectGuild($event)"
-                    [ngModel]="selectedGuild">
+                    [ngModel]="selectedGuildId">
                 <mat-option
                         *ngFor="let g of guilds$ | async"
-                        [value]="g">
+                        [value]="g.id">
                     {{g.name}} ({{g.id}})
                 </mat-option>
             </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="selectedGuild">
+        <mat-form-field *ngIf="selectedGuildId">
             <mat-label>Channels</mat-label>
             <mat-select
                     (ngModelChange)="selectChannel($event)"
-                    [ngModel]="selectedChannel">
+                    [ngModel]="selectedChannelId">
                 <mat-option
                         *ngFor="let c of channels$ | async"
-                        [value]="c">
+                        [value]="c.id">
                     {{c.name}} ({{c.id}})
                 </mat-option>
             </mat-select>
         </mat-form-field>
         <button
                 (click)="joinChannel()"
-                *ngIf="selectedGuild && selectedChannel && botStatus?.joinedChannel?.id != selectedChannel.id"
+                *ngIf="selectedGuildId && selectedChannelId && botStatus?.joinedChannel?.id != selectedChannelId"
                 [disabled]="loading"
                 color="primary"
                 mat-raised-button>
-            Join {{selectedChannel.name}}
+            Join
         </button>
         <button
                 (click)="leaveChannel()"
-                *ngIf="selectedGuild && botStatus?.joinedChannel as joinedChannel"
+                *ngIf="selectedGuildId && botStatus?.joinedChannel as joinedChannel"
                 [disabled]="loading"
                 color="warn"
                 mat-button>
-            Leave {{joinedChannel.name}} ({{selectedGuild.name}})
+            Leave {{joinedChannel.name}}
         </button>
         <mat-spinner
                 *ngIf="loading"

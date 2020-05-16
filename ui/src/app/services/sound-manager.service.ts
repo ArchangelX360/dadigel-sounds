@@ -3,7 +3,6 @@ import {Sound} from '../models/sound';
 import {DiscordService} from './discord.service';
 import {from, Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {Guild} from '../models/discord';
 
 @Injectable()
 export class SoundManagerService {
@@ -13,9 +12,9 @@ export class SoundManagerService {
   constructor(private discordService: DiscordService) {
   }
 
-  playSound(soundIdentifier: string, guild?: Guild): Observable<string> {
-    if (guild?.id) {
-      return this.discordService.playSoundInGuild(guild.id, soundIdentifier);
+  playSound(soundIdentifier: string, guildId?: string): Observable<string> {
+    if (guildId) {
+      return this.discordService.playSoundInGuild(guildId, soundIdentifier);
     }
 
     if (this.currentSong) {
