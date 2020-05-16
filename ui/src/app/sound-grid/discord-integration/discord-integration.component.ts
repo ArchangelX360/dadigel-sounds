@@ -1,7 +1,7 @@
 import {Component, OnDestroy, Output} from '@angular/core';
-import {filter, flatMap, map, tap} from 'rxjs/operators';
+import {filter, flatMap, tap} from 'rxjs/operators';
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
-import {Channel, Connection, Guild, TrackInfo} from '../../models/discord';
+import {BotStatus, Channel, Connection, Guild} from '../../models/discord';
 import {DiscordService} from '../../services/discord.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
@@ -17,11 +17,10 @@ export class DiscordIntegrationComponent implements OnDestroy {
   );
   readonly guilds$: Observable<Guild[]>;
   readonly channels$: Observable<Channel[]>;
-  readonly playingTrack$: Observable<TrackInfo | null>;
 
   selectedGuild: Guild | null;
   selectedChannel: Channel | null;
-  joinedChannel: Channel | null;
+  botStatus: BotStatus | null;
   loading = false;
 
   private subscriptions: Subscription[] = [];
@@ -32,7 +31,6 @@ export class DiscordIntegrationComponent implements OnDestroy {
   private readonly selectedChannel$: BehaviorSubject<Channel | null> = new BehaviorSubject(
     null,
   );
-  private readonly joinedChannel$: Observable<Channel | null>;
 
   constructor(
     private discordService: DiscordService,
@@ -43,17 +41,15 @@ export class DiscordIntegrationComponent implements OnDestroy {
       flatMap(g => this.discordService.getChannels(g.id)),
     );
 
-    const botStatus$ = this.selectedGuild$.pipe(
-      filter(g => g !== null),
-      flatMap(g => this.discordService.getStatus(g.id)),
-    );
-    this.joinedChannel$ = botStatus$.pipe(map(bs => bs.joinedChannel));
-    this.playingTrack$ = botStatus$.pipe(map(bs => bs.playingTrack));
-
     // these subscriptions are made without "| async" to avoid
     // multi-subscription in the template
     this.subscriptions.push(
-      this.joinedChannel$.subscribe(jc => (this.joinedChannel = jc)),
+      this.selectedGuild$
+        .pipe(
+          filter(g => g !== null),
+          flatMap(g => this.discordService.getStatus(g.id)),
+        )
+        .subscribe(b => (this.botStatus = b)),
     );
     this.subscriptions.push(
       this.selectedGuild$.subscribe(g => (this.selectedGuild = g)),

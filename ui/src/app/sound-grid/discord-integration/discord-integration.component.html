@@ -27,7 +27,7 @@
         </mat-form-field>
         <button
                 (click)="joinChannel()"
-                *ngIf="selectedGuild && selectedChannel && joinedChannel?.id != selectedChannel.id"
+                *ngIf="selectedGuild && selectedChannel && botStatus?.joinedChannel?.id != selectedChannel.id"
                 [disabled]="loading"
                 color="primary"
                 mat-raised-button>
@@ -35,7 +35,7 @@
         </button>
         <button
                 (click)="leaveChannel()"
-                *ngIf="selectedGuild && joinedChannel"
+                *ngIf="selectedGuild && botStatus?.joinedChannel as joinedChannel"
                 [disabled]="loading"
                 color="warn"
                 mat-button>
@@ -45,7 +45,7 @@
                 *ngIf="loading"
                 [diameter]="20"></mat-spinner>
         <mat-form-field
-                *ngIf="playingTrack$ | async as track">
+                *ngIf="botStatus?.playingTrack as track">
             <mat-label>Now playing</mat-label>
             <input
                     [value]="track.title"
