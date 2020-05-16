@@ -155,13 +155,13 @@ sounds:
       displayName: "Pitié 2"
     - filename: pleurs.mp3
       displayName: "Pleurs"
-    - filename: prendtapotionfilsdepute.mp3.mp3
+    - filename: prendtapotionfilsdepute.mp3
       displayName: "Prend ta potion fils de pute (mélodique)"
-    - filename: ptainjemesuisfaiseclate.mp3.mp3
+    - filename: ptainjemesuisfaiseclate.mp3
       displayName: "Ptain je me suis fait éclater"
-    - filename: ptaintumangestellementdesbites.mp3.mp3
+    - filename: ptaintumangestellementdesbites.mp3
       displayName: "Ptain tu manges tellement des bites"
-    - filename: puckyoudanslesfesses.mp3.mp3
+    - filename: puckyoudanslesfesses.mp3
       displayName: "Puck you dans les fesses"
     - filename: questcequetuveuxfaire.mp3
       displayName: "Qu'est ce que tu veux faire"
@@ -203,7 +203,7 @@ sounds:
       displayName: "Tu vas faire quoi"
     - filename: tuveuxdesboulettes.mp3
       displayName: "Tu veux des boulettes ?"
-    - filename: tuveuxdesboulettesbatard.mp3.mp3
+    - filename: tuveuxdesboulettesbatard.mp3
       displayName: "Tu veux des boulettes bâtard ?!"
     - filename: vousvoulezvoirlefeudartifice.mp3
       displayName: "Vous voulez voir le feu d'artifice ?"
