@@ -67,13 +67,9 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
                 logger.info("Starting file watcher on ${soundsConfiguration.folder}")
                 while (true) {
                     val watchKey = fileWatcher.take()
-
-                    for (event in watchKey.pollEvents()) {
-                        if (event.kind().type() == Path::class.java) {
-                            @Suppress("UNCHECKED_CAST")
-                            mutableFilenames.value = mutableFilenames.value.updatedBy(event as WatchEvent<Path>)
-                        }
-                    }
+                    watchKey.pollEvents()
+                            .filterPathEvents()
+                            .map { mutableFilenames.value = mutableFilenames.value.updatedBy(it) }
 
                     if (!watchKey.reset()) {
                         watchKey.cancel()
@@ -86,6 +82,14 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration) {
             }
         }
     }
+
+    private fun List<WatchEvent<*>>.filterPathEvents(): List<WatchEvent<Path>> =
+            filter {
+                it.kind().type() == Path::class.java
+            }.map {
+                @Suppress("UNCHECKED_CAST")
+                it as WatchEvent<Path>
+            }
 
     private fun Set<String>.updatedBy(e: WatchEvent<Path>): Set<String> {
         when (e.kind().name()) {
