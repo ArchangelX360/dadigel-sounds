@@ -1,9 +1,11 @@
 <app-discord-integration (connection)="onConnection($event)"></app-discord-integration>
 <app-youtube (selected)="onSoundSelected($event)"></app-youtube>
-<mat-card *ngIf="sounds | async as availableSounds">
-    <mat-card-title>Sounds</mat-card-title>
-    <mat-card-content class="sound-container">
-        <app-sound-tile (selected)="onSoundSelected($event.filename)" *ngFor="let sound of availableSounds"
-                        [sound]="sound"></app-sound-tile>
-    </mat-card-content>
-</mat-card>
+<ng-container *ngIf="sounds | async as availableSounds">
+    <mat-card>
+        <mat-card-title>Sounds</mat-card-title>
+        <mat-card-content class="sound-container">
+            <app-sound-tile (selected)="onSoundSelected($event.filename)" *ngFor="let sound of availableSounds"
+                            [sound]="sound"></app-sound-tile>
+        </mat-card-content>
+    </mat-card>
+</ng-container>
