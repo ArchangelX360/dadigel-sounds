@@ -46,7 +46,6 @@ export class DiscordIntegrationComponent implements OnDestroy {
     const botStatus$ = this.selectedGuild$.pipe(
       filter(g => g !== null),
       flatMap(g => this.discordService.getStatus(g.id)),
-      tap(s => console.log('Bot status: ', s)),
     );
     this.joinedChannel$ = botStatus$.pipe(map(bs => bs.joinedChannel));
     this.playingTrack$ = botStatus$.pipe(map(bs => bs.playingTrack));
