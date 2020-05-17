@@ -75,23 +75,27 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
      * [guildId].
      */
     fun play(guildId: Snowflake, soundIdentifier: String) {
-        logger.info("Playing track $soundIdentifier in guild $guildId")
+        val resolvedIdentifier = soundIdentifier.resolveIdentifier()
+        logger.info("Playing track $resolvedIdentifier in guild $guildId")
         val provider = audioProvider[guildId]
                 ?: error("Audio provider not found for guild $guildId, you must register one to enable playing tracks")
         if (provider.player.playingTrack != null) {
             provider.player.stopTrack()
         }
 
-        if (soundsConfiguration.supportedExtensions.any { soundIdentifier.endsWith(it) }) {
+        audioManager.loadItem(soundIdentifier.resolveIdentifier(), provider.scheduler)
+    }
+
+    fun String.resolveIdentifier(): String {
+        if (soundsConfiguration.supportedExtensions.any { this.endsWith(it) }) {
             val rootPath = Paths.get(soundsConfiguration.folder).normalize().toAbsolutePath()
-            val path = Paths.get(soundsConfiguration.folder, soundIdentifier).normalize().toAbsolutePath()
+            val path = Paths.get(soundsConfiguration.folder, this).normalize().toAbsolutePath()
             if (!path.startsWith(rootPath)) {
-                logger.error("trying to access a path that is not '${soundsConfiguration.folder}' nor its children")
+                throw IllegalArgumentException("trying to access a path that is not '${soundsConfiguration.folder}' nor its children")
             }
-            audioManager.loadItem(path.toString(), provider.scheduler)
-        } else {
-            audioManager.loadItem(soundIdentifier, provider.scheduler)
+            return path.toString()
         }
+        return this
     }
 
     companion object {
