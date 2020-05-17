@@ -47,7 +47,7 @@
             </ng-template>
         </mat-list-item>
     </mat-list>
-    <mat-form-field *ngIf="botStatus?.playingTrack">
+    <mat-form-field *ngIf="botStatus?.playingTrack && botStatus?.joinedChannel">
         <mat-label>Now playing</mat-label>
         <input
                 [value]="botStatus?.playingTrack?.title"
