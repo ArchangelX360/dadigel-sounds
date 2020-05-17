@@ -24,9 +24,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import se.dorne.discordbot.configurations.SoundsConfiguration
 import se.dorne.discordbot.models.TrackInfo
 import java.nio.ByteBuffer
+import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -34,7 +37,7 @@ private val MAX_OPUS_FRAME_SIZE = StandardAudioDataFormats.DISCORD_OPUS.maximumC
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Service
-class AudioService {
+class AudioService(@Autowired private val soundsConfiguration: SoundsConfiguration) {
 
     private val audioManager = DefaultAudioPlayerManager().apply {
         // This is an optimization strategy that Discord4J can utilize. It is not important to understand
@@ -65,23 +68,30 @@ class AudioService {
     fun watchPlayingTrack(guildId: Snowflake): Flow<TrackInfo?> = getOrCreateAudioProvider(guildId).trackInfo
 
     private fun getOrCreateAudioProvider(guildId: Snowflake) =
-        audioProvider.computeIfAbsent(guildId) { CustomAudioProvider(audioManager.createPlayer()) }
+            audioProvider.computeIfAbsent(guildId) { CustomAudioProvider(audioManager.createPlayer()) }
 
     /**
-     * Plays the track identified by [soundFilepath] in the registered guild with the given
+     * Plays the track identified by [soundIdentifier] in the registered guild with the given
      * [guildId].
      */
-    fun play(guildId: Snowflake, soundFilepath: String) {
-        logger.info("Playing track $soundFilepath in guild $guildId")
-        val provider = audioProvider[guildId] ?:
-            error("Audio provider not found for guild $guildId, you must register one to enable playing tracks")
+    fun play(guildId: Snowflake, soundIdentifier: String) {
+        logger.info("Playing track $soundIdentifier in guild $guildId")
+        val provider = audioProvider[guildId]
+                ?: error("Audio provider not found for guild $guildId, you must register one to enable playing tracks")
         if (provider.player.playingTrack != null) {
             provider.player.stopTrack()
         }
 
-        // FIXME: handle .mp3 resources
-        audioManager.loadItem(soundFilepath, provider.scheduler)
-        // FIXME: wrap scheduler events in a return
+        if (soundsConfiguration.supportedExtensions.any { soundIdentifier.endsWith(it) }) {
+            val rootPath = Paths.get(soundsConfiguration.folder).normalize().toAbsolutePath()
+            val path = Paths.get(soundsConfiguration.folder, soundIdentifier).normalize().toAbsolutePath()
+            if (!path.startsWith(rootPath)) {
+                logger.error("trying to access a path that is not '${soundsConfiguration.folder}' nor its children")
+            }
+            audioManager.loadItem(path.toString(), provider.scheduler)
+        } else {
+            audioManager.loadItem(soundIdentifier, provider.scheduler)
+        }
     }
 
     companion object {
@@ -91,7 +101,7 @@ class AudioService {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 private class CustomAudioProvider(
-    val player: AudioPlayer
+        val player: AudioPlayer
 ) : AudioProvider(ByteBuffer.allocate(MAX_OPUS_FRAME_SIZE)), AudioEventListener {
 
     init {
