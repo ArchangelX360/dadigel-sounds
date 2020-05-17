@@ -1,5 +1,5 @@
-import {Component, OnDestroy, Output} from '@angular/core';
-import {filter, flatMap, tap} from 'rxjs/operators';
+import {Component, OnDestroy, OnInit, Output} from '@angular/core';
+import {filter, flatMap, withLatestFrom} from 'rxjs/operators';
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import {BotStatus, Channel, Connection, Guild} from '../../models/discord';
 import {DiscordService} from '../../services/discord.service';
@@ -10,7 +10,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
   templateUrl: './discord-integration.component.html',
   styleUrls: ['./discord-integration.component.scss'],
 })
-export class DiscordIntegrationComponent implements OnDestroy {
+export class DiscordIntegrationComponent implements OnInit, OnDestroy {
   @Output()
   readonly connection: BehaviorSubject<Connection | null> = new BehaviorSubject(
     null,
@@ -19,14 +19,12 @@ export class DiscordIntegrationComponent implements OnDestroy {
   readonly channels$: Observable<Channel[]>;
 
   selectedGuildId: string | null;
-  selectedChannelId: string | null;
   botStatus: BotStatus | null;
-  loading = false;
+  channelSwitching = false;
 
   private subscriptions: Subscription[] = [];
 
   private readonly selectedGuildId$: BehaviorSubject<string | null> = new BehaviorSubject(null);
-  private readonly selectedChannelId$: BehaviorSubject<string | null> = new BehaviorSubject(null);
 
   constructor(
     private discordService: DiscordService,
@@ -36,22 +34,30 @@ export class DiscordIntegrationComponent implements OnDestroy {
     this.channels$ = this.selectedGuildId$.pipe(
       flatMap(gId => this.discordService.getChannels(gId)),
     );
+  }
 
+  ngOnInit(): void {
     // these subscriptions are made without "| async" to avoid
     // multi-subscription in the template
     this.subscriptions.push(
       this.selectedGuildId$
         .pipe(
           filter(gId => gId !== null),
-          flatMap(gId => this.discordService.getStatus(gId)),
+          flatMap(guildId => this.discordService.getStatus(guildId)),
+          withLatestFrom(this.selectedGuildId$),
         )
-        .subscribe(b => (this.botStatus = b)),
-    );
-    this.subscriptions.push(
-      this.selectedGuildId$.subscribe(gId => (this.selectedGuildId = gId)),
-    );
-    this.subscriptions.push(
-      this.selectedChannelId$.subscribe(cId => (this.selectedChannelId = cId)),
+        .subscribe(([status, guildId]) => {
+          this.selectedGuildId = guildId;
+          this.botStatus = status;
+          if (this.selectedGuildId && this.botStatus?.joinedChannel?.id) {
+            this.connection.next({
+              guildId,
+              channelId: this.botStatus.joinedChannel.id,
+            });
+          } else {
+            this.connection.next(null);
+          }
+        }),
     );
   }
 
@@ -59,41 +65,30 @@ export class DiscordIntegrationComponent implements OnDestroy {
     this.selectedGuildId$.next(gId);
   }
 
-  selectChannel(cId: string) {
-    this.selectedChannelId$.next(cId);
-  }
-
-  joinChannel() {
-    this.loading = true;
+  joinChannel(channelId: string) {
+    this.channelSwitching = true;
     const guildId = this.selectedGuildId;
-    const channelId = this.selectedChannelId;
     if (guildId && channelId) {
       this.subscriptions.push(
-        this.discordService
-          .joinChannel(guildId, channelId)
-          .pipe(tap(() => (this.loading = false)))
-          .subscribe(
-            () => this.connection.next({guildId, channelId}),
-            httpError =>
-              this.handleError('failed to join channel in Discord', httpError),
-          ),
+        this.discordService.joinChannel(guildId, channelId).subscribe(
+          () => (this.channelSwitching = false),
+          httpError =>
+            this.handleError('failed to join channel in Discord', httpError),
+        ),
       );
     }
   }
 
   leaveChannel() {
-    this.loading = true;
+    this.channelSwitching = true;
     const guildId = this.selectedGuildId;
     if (guildId) {
       this.subscriptions.push(
-        this.discordService
-          .leaveChannel(guildId)
-          .pipe(tap(() => (this.loading = false)))
-          .subscribe(
-            () => this.connection.next(null),
-            httpError =>
-              this.handleError('failed to leave channel in Discord', httpError),
-          ),
+        this.discordService.leaveChannel(guildId).subscribe(
+          () => (this.channelSwitching = false),
+          httpError =>
+            this.handleError('failed to leave channel in Discord', httpError),
+        ),
       );
     }
   }

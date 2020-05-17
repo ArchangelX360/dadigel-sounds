@@ -1,8 +1,8 @@
 mat-card-content {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 mat-form-field {
@@ -11,8 +11,23 @@ mat-form-field {
 
 mat-card {
   margin: 5px;
+  min-width: 340px;
 }
 
 mat-spinner {
   margin-left: 10px;
+}
+
+.channel-id {
+  font-size: 10px;
+  color: dimgray;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+button {
+  margin-left: 15px;
+  width: 100px;
 }

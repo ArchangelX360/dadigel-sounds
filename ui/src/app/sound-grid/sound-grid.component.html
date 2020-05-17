@@ -1,16 +1,20 @@
-<app-discord-integration
-        (connection)="onConnection($event)"></app-discord-integration>
-<app-youtube
-        (selected)="onSoundSelected($event)"></app-youtube>
-<mat-card>
-    <mat-card-title>SoundBox</mat-card-title>
-    <mat-card-content
-            class="sound-container">
-        <ng-container
-                *ngFor="let sound of sounds$ | async">
-            <app-sound-tile
-                    (selected)="onSoundSelected($event.filename)"
-                    [sound]="sound"></app-sound-tile>
-        </ng-container>
-    </mat-card-content>
-</mat-card>
+<section class="container">
+    <app-discord-integration
+            (connection)="onConnection($event)"></app-discord-integration>
+    <section>
+        <mat-card>
+            <mat-card-title>SoundBox</mat-card-title>
+            <mat-card-content>
+                <app-youtube
+                        (selected)="onSoundSelected($event)"></app-youtube>
+                <section
+                        class="sound-container">
+                    <app-sound-tile
+                            (selected)="onSoundSelected($event.filename)"
+                            *ngFor="let sound of sounds$ | async"
+                            [sound]="sound"></app-sound-tile>
+                </section>
+            </mat-card-content>
+        </mat-card>
+    </section>
+</section>

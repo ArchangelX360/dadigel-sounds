@@ -15,6 +15,8 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
 import {YoutubeComponent} from './youtube/youtube.component';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import {MatListModule} from '@angular/material/list';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -30,6 +32,8 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
     MatProgressSpinnerModule,
     MatInputModule,
     MatCardModule,
+    MatListModule,
+    MatIconModule,
     HttpClientModule,
     MatSelectModule,
     FormsModule,

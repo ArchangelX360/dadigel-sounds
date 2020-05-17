@@ -4,8 +4,10 @@ mat-card-content {
 
 mat-form-field {
   margin-right: 10px;
+  width: 500px;
 }
 
 mat-card {
   margin: 5px;
+  flex: 1 1 auto;
 }
