@@ -3,10 +3,10 @@ import {Sound} from '../models/sound';
 import {DiscordService} from './discord.service';
 import {from, Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
 
 @Injectable()
 export class SoundManagerService {
-  soundRoot = 'assets/sounds/';
   currentSong: HTMLAudioElement;
 
   constructor(private discordService: DiscordService) {
@@ -21,7 +21,7 @@ export class SoundManagerService {
       this.currentSong.pause();
     }
     // eslint-disable-next-line no-undef
-    this.currentSong = new Audio(this.soundRoot + soundIdentifier);
+    this.currentSong = new Audio(`${environment.soundCdn}/${soundIdentifier}`);
     this.currentSong.load();
     return from(this.currentSong.play()).pipe(
       map(() => {

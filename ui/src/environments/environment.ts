@@ -5,6 +5,7 @@
 export const environment = {
   production: false,
   botApi: 'http://localhost:8080',
+  soundCdn: 'https://dadigel.dorne.se/assets/sounds',
 };
 
 /*
