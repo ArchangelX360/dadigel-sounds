@@ -7,6 +7,13 @@ section {
 
 mat-form-field {
   margin-right: 10px;
+  width: 100%;
+}
+
+mat-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 mat-spinner {
@@ -18,11 +25,6 @@ mat-spinner {
   color: dimgray;
 }
 
-mat-form-field {
-  width: 100%;
-}
-
 button {
   margin-left: 15px;
-  width: 100px;
 }
