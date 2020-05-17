@@ -83,7 +83,7 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
             provider.player.stopTrack()
         }
 
-        audioManager.loadItem(soundIdentifier.resolveIdentifier(), provider.scheduler)
+        audioManager.loadItem(resolvedIdentifier, provider.scheduler)
     }
 
     fun String.resolveIdentifier(): String {
