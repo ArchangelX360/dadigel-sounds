@@ -1,9 +1,9 @@
 import {Injectable, NgZone} from '@angular/core';
 import {BotStatus, Channel, Guild} from '../models/discord';
-import {Observable, ReplaySubject} from 'rxjs';
+import {Observable, Observer} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
-import {finalize, map} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 import {Sound} from '../models/sound';
 
 @Injectable()
@@ -72,19 +72,20 @@ export class DiscordService {
   }
 
   private observe<T>(url: string): Observable<T> {
-    const o = new ReplaySubject<T>(1);
-    // eslint-disable-next-line no-undef
-    const es = new EventSource(url);
-    es.onerror = err => {
-      console.log(`${url} errored with ${err}`);
-    };
-    es.onmessage = ev => {
-      this.ngZone.run(() => o.next(JSON.parse(ev.data)));
-    };
-    return o.pipe(
-      finalize(() => {
+    return new Observable<T>((observer: Observer<T>) => {
+      // eslint-disable-next-line no-undef
+      const es = new EventSource(url);
+      es.onerror = err => {
+        console.log(`${url} errored with ${err}`);
+      };
+      es.onmessage = event => {
+        this.ngZone.run(() => {
+          observer.next(JSON.parse(event.data));
+        });
+      };
+      return () => {
         es.close();
-      }),
-    );
+      };
+    });
   }
 }
