@@ -18,15 +18,15 @@ export interface IsConnectedResponse {
 }
 
 export interface BotStatus {
-  state: BotState,
-  joinedChannel: Channel | null,
-  playingTrack: TrackInfo | null
+  state: BotState;
+  joinedChannel: Channel | null;
+  playingTrack: TrackInfo | null;
 }
 
 export enum BotState {
   OFFLINE,
   JOINED_IDLE,
-  PLAYING
+  PLAYING,
 }
 
 export interface TrackInfo {
