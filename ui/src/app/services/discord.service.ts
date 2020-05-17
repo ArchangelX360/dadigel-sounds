@@ -13,7 +13,6 @@ export class DiscordService {
 
   getSounds(): Observable<Sound[]> {
     return this.observe<Sound[]>(`${environment.botApi}/sounds`).pipe(
-      tap(console.log),
       map(sounds => {
         return sounds.map(s => ({
           filename: s.filename,
@@ -74,10 +73,25 @@ export class DiscordService {
 
   private observe<T>(url: string): Observable<T> {
     const o = new ReplaySubject<T>(1);
+    // eslint-disable-next-line no-undef
     const es = new EventSource(url);
+    es.onopen = () => {
+      console.log(`${url} opened`);
+    };
+    es.onerror = err => {
+      console.log(`${url} errored with ${err}`);
+    };
     es.onmessage = ev => {
       o.next(JSON.parse(ev.data));
     };
-    return o.pipe(finalize(() => es.close()));
+    return o.pipe(
+      tap(d => {
+        console.log(`${url} received:`, d);
+      }),
+      finalize(() => {
+        es.close();
+        console.log(`${url} closed`);
+      }),
+    );
   }
 }
