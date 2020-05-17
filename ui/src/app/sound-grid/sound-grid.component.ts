@@ -1,9 +1,10 @@
 import {Component, OnDestroy} from '@angular/core';
-import {Sound} from '../models/sound';
+import {Sound, soundSorter} from '../models/sound';
 import {SoundManagerService} from '../services/sound-manager.service';
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import {Connection} from '../models/discord';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'app-sound-grid',
@@ -19,7 +20,12 @@ export class SoundGridComponent implements OnDestroy {
     private soundManager: SoundManagerService,
     private snackbar: MatSnackBar,
   ) {
-    this.sounds$ = this.soundManager.getSounds();
+    this.sounds$ = this.soundManager.getSounds().pipe(
+      map(sounds => {
+        sounds.sort(soundSorter);
+        return sounds;
+      }),
+    );
     this.activeConnection$ = new BehaviorSubject(null);
   }
 
