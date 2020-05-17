@@ -1,14 +1,14 @@
-import {Injectable} from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {BotStatus, Channel, Guild} from '../models/discord';
 import {Observable, ReplaySubject} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
-import {finalize, map, tap} from 'rxjs/operators';
+import {finalize, map} from 'rxjs/operators';
 import {Sound} from '../models/sound';
 
 @Injectable()
 export class DiscordService {
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private ngZone: NgZone) {
   }
 
   getSounds(): Observable<Sound[]> {
@@ -75,22 +75,15 @@ export class DiscordService {
     const o = new ReplaySubject<T>(1);
     // eslint-disable-next-line no-undef
     const es = new EventSource(url);
-    es.onopen = () => {
-      console.log(`${url} opened`);
-    };
     es.onerror = err => {
       console.log(`${url} errored with ${err}`);
     };
     es.onmessage = ev => {
-      o.next(JSON.parse(ev.data));
+      this.ngZone.run(() => o.next(JSON.parse(ev.data)));
     };
     return o.pipe(
-      tap(d => {
-        console.log(`${url} received:`, d);
-      }),
       finalize(() => {
         es.close();
-        console.log(`${url} closed`);
       }),
     );
   }
