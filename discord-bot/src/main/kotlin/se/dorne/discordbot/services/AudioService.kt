@@ -86,7 +86,7 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
         audioManager.loadItem(resolvedIdentifier, provider.scheduler)
     }
 
-    fun String.resolveIdentifier(): String {
+    private fun String.resolveIdentifier(): String {
         if (soundsConfiguration.supportedExtensions.any { this.endsWith(it) }) {
             val rootPath = Paths.get(soundsConfiguration.folder).normalize().toAbsolutePath()
             val path = Paths.get(soundsConfiguration.folder, this).normalize().toAbsolutePath()
