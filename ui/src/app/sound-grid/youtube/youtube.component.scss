@@ -1,13 +1,15 @@
-mat-card-content {
+section {
+  display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 mat-form-field {
   margin-right: 10px;
-  width: 500px;
+  flex-grow: 10;
 }
 
-mat-card {
-  margin: 5px;
-  flex: 1 1 auto;
+button {
+  flex-grow: 1;
 }

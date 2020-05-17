@@ -17,6 +17,7 @@ import {YoutubeComponent} from './youtube/youtube.component';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatListModule} from '@angular/material/list';
 import {MatIconModule} from '@angular/material/icon';
+import {MatExpansionModule} from '@angular/material/expansion';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import {MatIconModule} from '@angular/material/icon';
     MatCardModule,
     MatListModule,
     MatIconModule,
+    MatExpansionModule,
     HttpClientModule,
     MatSelectModule,
     FormsModule,

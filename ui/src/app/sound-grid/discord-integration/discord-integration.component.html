@@ -1,60 +1,57 @@
-<mat-card>
-    <mat-card-title>Discord Integration</mat-card-title>
-    <mat-card-content>
-        <mat-form-field>
-            <mat-label>Guilds</mat-label>
-            <mat-select
-                    (ngModelChange)="selectGuild($event)"
-                    [ngModel]="selectedGuildId">
-                <mat-option
-                        *ngFor="let g of guilds$ | async"
-                        [value]="g.id">
-                    {{g.name}}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-list *ngIf="selectedGuildId">
-            <div mat-subheader>Channels
-                <mat-spinner
-                        *ngIf="channelSwitching"
-                        [diameter]="20"></mat-spinner>
-            </div>
-            <mat-list-item
-                    *ngFor="let c of channels$ | async">
-                <mat-icon
-                        mat-list-icon>keyboard_arrow_right
-                </mat-icon>
-                <div mat-line>{{c.name}}</div>
-                <ng-container *ngIf="botStatus?.joinedChannel?.id !== c.id; else loggedInChan">
-                    <button
-                            (click)="joinChannel(c.id)"
-                            [disabled]="channelSwitching"
-                            color="primary"
-                            mat-raised-button>
-                        Join
-                    </button>
-                </ng-container>
-                <ng-template #loggedInChan>
-                    <button
-                            (click)="leaveChannel()"
-                            [disabled]="channelSwitching"
-                            color="warn"
-                            mat-button>
-                        Leave
-                        <mat-icon
-                                *ngIf="botStatus?.playingTrack"
-                                mat-list-icon>volume_up
-                        </mat-icon>
-                    </button>
-                </ng-template>
-            </mat-list-item>
-        </mat-list>
-        <mat-form-field *ngIf="botStatus?.playingTrack">
-            <mat-label>Now playing</mat-label>
-            <input
-                    [value]="botStatus?.playingTrack?.title"
-                    disabled
-                    matInput>
-        </mat-form-field>
-    </mat-card-content>
-</mat-card>
+<section>
+    <mat-form-field>
+        <mat-label>Guilds</mat-label>
+        <mat-select
+                (ngModelChange)="selectGuild($event)"
+                [ngModel]="selectedGuildId">
+            <mat-option
+                    *ngFor="let g of guilds$ | async"
+                    [value]="g.id">
+                {{g.name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+    <mat-list *ngIf="selectedGuildId">
+        <div mat-subheader>Channels
+            <mat-spinner
+                    *ngIf="channelSwitching"
+                    [diameter]="20"></mat-spinner>
+        </div>
+        <mat-list-item
+                *ngFor="let c of channels$ | async">
+            <mat-icon
+                    mat-list-icon>keyboard_arrow_right
+            </mat-icon>
+            <div mat-line>{{c.name}}</div>
+            <ng-container *ngIf="botStatus?.joinedChannel?.id !== c.id; else loggedInChan">
+                <button
+                        (click)="joinChannel(c.id)"
+                        [disabled]="channelSwitching"
+                        color="primary"
+                        mat-raised-button>
+                    Join
+                </button>
+            </ng-container>
+            <ng-template #loggedInChan>
+                <button
+                        (click)="leaveChannel()"
+                        [disabled]="channelSwitching"
+                        color="warn"
+                        mat-button>
+                    Leave
+                    <mat-icon
+                            *ngIf="botStatus?.playingTrack"
+                            mat-list-icon>volume_up
+                    </mat-icon>
+                </button>
+            </ng-template>
+        </mat-list-item>
+    </mat-list>
+    <mat-form-field *ngIf="botStatus?.playingTrack">
+        <mat-label>Now playing</mat-label>
+        <input
+                [value]="botStatus?.playingTrack?.title"
+                disabled
+                matInput>
+    </mat-form-field>
+</section>

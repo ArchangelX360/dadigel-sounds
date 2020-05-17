@@ -1,12 +1,12 @@
 .container {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .sound-container {
   display: flex;
   flex-direction: row;
-  overflow: auto;
   flex-wrap: wrap;
   justify-content: space-evenly;
 }
@@ -15,7 +15,14 @@ mat-card {
   margin: 5px;
 }
 
-mat-card-content {
+#discord-integration {
+  flex-basis: 250px;
+  flex-grow: 1;
+}
+
+#soundbox {
+  flex-basis: 400px;
+  flex-grow: 5;
   display: flex;
   flex-direction: column;
 }

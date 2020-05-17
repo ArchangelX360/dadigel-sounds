@@ -1,7 +1,14 @@
 <section class="container">
-    <app-discord-integration
-            (connection)="onConnection($event)"></app-discord-integration>
-    <section>
+    <section id="discord-integration">
+        <mat-card>
+            <mat-card-title>Discord Integration</mat-card-title>
+            <mat-card-content>
+                <app-discord-integration
+                        (connection)="onConnection($event)"></app-discord-integration>
+            </mat-card-content>
+        </mat-card>
+    </section>
+    <section id="soundbox">
         <mat-card>
             <mat-card-title>SoundBox</mat-card-title>
             <mat-card-content>
