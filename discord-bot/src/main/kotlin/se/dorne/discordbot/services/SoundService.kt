@@ -65,11 +65,12 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration): Dis
     private fun listFiles(folder: Path, predicate: (Path) -> Boolean): Set<Path> = Files.list(folder)
         .asSequence()
         .filter(predicate)
-        .onEach { logger.info("found file $it") }
+        .onEach { logger.info("Found file $it") }
         .toSet()
 
     private fun Path.hasSupportedExtension(): Boolean {
-        return soundsConfiguration.supportedExtensions.any { this.fileName.endsWith(it) }
+        val fileNameStr = this.fileName.toString()
+        return soundsConfiguration.supportedExtensions.any { fileNameStr.endsWith(it) }
     }
 
     private fun logFileEvent(e: WatchEvent<Path>) {
@@ -77,26 +78,25 @@ class SoundService(@Autowired val soundsConfiguration: SoundsConfiguration): Dis
         when (e.kind()) {
             StandardWatchEventKinds.ENTRY_CREATE -> {
                 if (path.hasSupportedExtension()) {
-                    logger.info("file created $path")
+                    logger.info("File created $path")
                 } else {
-                    logger.warn("ignoring creation of $path")
+                    logger.warn("Ignoring creation of $path")
                 }
             }
             StandardWatchEventKinds.ENTRY_DELETE -> {
                 return if (path.hasSupportedExtension()) {
-                    logger.info("file deleted $path")
+                    logger.info("File deleted $path")
                 } else {
-                    logger.warn("ignoring deletion of $path")
+                    logger.warn("Ignoring deletion of $path")
                 }
             }
-            else -> logger.warn("ignored event $e")
+            else -> logger.warn("Ignored event $e")
         }
     }
 
     override fun destroy() {
-        runBlocking {
-            scope.cancel()
-        }
+        logger.info("Closing SoundService CoroutineScope")
+        scope.cancel()
     }
 
     companion object {
