@@ -23,14 +23,13 @@ fun Flow<WatchEvent<Path>>.updatingSet(initialSet: Set<Path> = emptySet()): Flow
     }
 }
 
+// blocking calls are ok because of .flowOn(Dispatchers.IO)
+// withContext(IO) should not be used around emit() to ensure context preservation
+@Suppress("BlockingMethodInNonBlockingContext")
 @OptIn(ExperimentalCoroutinesApi::class)
 fun Path.watchPathEvents(vararg eventTypes: WatchEvent.Kind<Path>): Flow<WatchEvent<Path>> =
     flow {
-        // blocking calls are ok because of .flowOn(Dispatchers.IO)
-        // withContext(IO) should not be used around emit() to ensure context preservation
-        @Suppress("BlockingMethodInNonBlockingContext")
         val watchService = FileSystems.getDefault().newWatchService()
-        @Suppress("BlockingMethodInNonBlockingContext")
         val sub = register(watchService, eventTypes)
         try {
             while (coroutineContext.isActive) {
@@ -47,7 +46,6 @@ fun Path.watchPathEvents(vararg eventTypes: WatchEvent.Kind<Path>): Flow<WatchEv
             }
         } finally {
             sub.cancel()
-            @Suppress("BlockingMethodInNonBlockingContext")
             watchService.close()
         }
     }.flowOn(Dispatchers.IO)
