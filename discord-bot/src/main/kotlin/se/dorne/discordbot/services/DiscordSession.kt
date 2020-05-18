@@ -122,6 +122,7 @@ class DiscordSession(
     }
 
     suspend fun leave(guildId: Snowflake) {
+        timeoutTicker.tick()
         try {
             val connection = connectionsByGuild.remove(guildId)
             if (connection == null) {
