@@ -11,18 +11,21 @@ import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
 /**
- * Sends ticks to prevent the debouncer from firing.
+ * Allows to notify when activity happens to reset the inactive timeout.
  */
-interface DebounceTicker {
-    suspend fun tick()
+interface ActivityMonitor {
+    /**
+     * Notifies that activity happened to reset the inactive timeout.
+     */
+    suspend fun notify()
 }
 
 /**
- * Fires [onDebounce] after the given [timeout] if inactive.
- * The returned [DebounceTicker] should be used to reset the timeout if necessary to prevent firing.
+ * Fires [onInactive] after the given [inactiveTimeout] if inactive.
+ * The returned [ActivityMonitor] should be used to [notify] activity and reset the timeout.
  */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
-fun CoroutineScope.launchDebounce(timeout: Duration, onDebounce: suspend () -> Unit): DebounceTicker {
+fun CoroutineScope.launchInactiveTimeout(inactiveTimeout: Duration, onInactive: suspend () -> Unit): ActivityMonitor {
 
     // channel used to reset the debounce and prevent it from firing
     val resetter = Channel<Unit>()
@@ -31,13 +34,13 @@ fun CoroutineScope.launchDebounce(timeout: Duration, onDebounce: suspend () -> U
         while (isActive) {
             select<Unit> {
                 resetter.onReceive { }
-                onTimeout(timeout, onDebounce)
+                onTimeout(inactiveTimeout, onInactive)
             }
         }
     }
 
-    return object : DebounceTicker {
-        override suspend fun tick() {
+    return object : ActivityMonitor {
+        override suspend fun notify() {
             resetter.send(Unit)
         }
     }

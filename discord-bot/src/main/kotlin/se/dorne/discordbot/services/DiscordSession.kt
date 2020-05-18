@@ -20,9 +20,9 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import se.dorne.discordbot.utils.DebounceTicker
+import se.dorne.discordbot.utils.ActivityMonitor
 import se.dorne.discordbot.utils.awaitVoidWithTimeout
-import se.dorne.discordbot.utils.launchDebounce
+import se.dorne.discordbot.utils.launchInactiveTimeout
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -54,7 +54,7 @@ class DiscordSession(
 
     private val joinedChannelsByGuild: MutableMap<Snowflake, MutableStateFlow<VoiceChannel?>> = ConcurrentHashMap()
 
-    private val timeoutTicker: DebounceTicker
+    val activityMonitor: ActivityMonitor
 
     init {
         guildWatcher.startIn(scope)
@@ -69,10 +69,8 @@ class DiscordSession(
             }
         }
 
-        // TODO use this debounce ticker when playing sounds to reset the timeout
-        //  => expose this property?
         // Automatically logs out when inactive for too long
-        timeoutTicker = scope.launchDebounce(botInactiveTimeout) {
+        activityMonitor = scope.launchInactiveTimeout(botInactiveTimeout) {
             logger.info("Bot inactive for $botInactiveTimeout, logging out")
             close()
         }
@@ -88,7 +86,7 @@ class DiscordSession(
             joinedChannelsByGuild.computeIfAbsent(guildId) { MutableStateFlow(null) }
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
-        timeoutTicker.tick()
+        activityMonitor.notify()
         if (connectionsByGuild.containsKey(guildId)) {
             leave(guildId)
         }
@@ -122,7 +120,7 @@ class DiscordSession(
     }
 
     suspend fun leave(guildId: Snowflake) {
-        timeoutTicker.tick()
+        activityMonitor.notify()
         try {
             val connection = connectionsByGuild.remove(guildId)
             if (connection == null) {
