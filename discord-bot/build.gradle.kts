@@ -22,11 +22,14 @@ dependencies {
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.3.6")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
 
-	implementation("com.discord4j:discord4j-core:3.1.0.M2")
-	implementation("com.discord4j:discord4j-voice:3.1.0.M2")
+	val kotlinCoroutinesVersion = "1.3.6"
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinCoroutinesVersion")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+
+	val discord4JVersion = "3.1.0.M2"
+	implementation("com.discord4j:discord4j-core:$discord4JVersion")
+	implementation("com.discord4j:discord4j-voice:$discord4JVersion")
 	implementation("com.sedmelluq:lavaplayer:1.3.48")
 
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
