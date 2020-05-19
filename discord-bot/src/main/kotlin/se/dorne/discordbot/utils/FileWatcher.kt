@@ -2,6 +2,7 @@ package se.dorne.discordbot.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import java.nio.file.*
@@ -23,18 +24,24 @@ fun Flow<WatchEvent<Path>>.updatingSet(initialSet: Set<Path> = emptySet()): Flow
     }
 }
 
+/**
+ * Returns a [Flow] of events of the provided [types] that happened on paths relative to this [Path].
+ */
 // blocking calls are ok because of .flowOn(Dispatchers.IO)
 // withContext(IO) should not be used around emit() to ensure context preservation
 @Suppress("BlockingMethodInNonBlockingContext")
 @OptIn(ExperimentalCoroutinesApi::class)
-fun Path.watchPathEvents(vararg eventTypes: WatchEvent.Kind<Path>): Flow<WatchEvent<Path>> =
+fun Path.watchPathEvents(vararg types: WatchEvent.Kind<Path>): Flow<WatchEvent<Path>> =
     flow {
         val watchService = FileSystems.getDefault().newWatchService()
-        val sub = register(watchService, eventTypes)
+        val sub = register(watchService, types)
         try {
             while (coroutineContext.isActive) {
-                @Suppress("BlockingMethodInNonBlockingContext")
-                val watchKey = watchService.take()
+                val watchKey = watchService.poll()
+                if (watchKey == null) {
+                    delay(3000)
+                    continue
+                }
                 watchKey.pollEvents().filterPathEvents().forEach {
                     emit(it)
                 }
