@@ -48,7 +48,7 @@ class DiscordSession(
     /** Useful to detect when to reconnect */
     var connected: Boolean = true
 
-    private val guildWatcher: GuildWatcher = GuildWatcher(client)
+    private val guildWatcher: GuildWatcher = scope.watchGuilds(client)
 
     private val connectionsByGuild: MutableMap<Snowflake, VoiceConnection> = ConcurrentHashMap()
 
@@ -57,8 +57,6 @@ class DiscordSession(
     val activityMonitor: ActivityMonitor
 
     init {
-        guildWatcher.startIn(scope)
-
         // FIXME not sure this is really useful
         // Shuts down this session in case of disconnection
         scope.launch {
@@ -76,7 +74,7 @@ class DiscordSession(
         }
     }
 
-    fun watchGuilds(): Flow<List<Guild>> = guildWatcher.guildsState
+    fun watchGuilds(): Flow<List<Guild>> = guildWatcher.guilds
 
     fun watchChannels(guildId: Snowflake): Flow<List<VoiceChannel>> = guildWatcher.watchChannels(guildId)
 
