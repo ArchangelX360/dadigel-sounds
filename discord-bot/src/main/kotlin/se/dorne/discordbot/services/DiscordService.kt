@@ -79,22 +79,7 @@ class DiscordService(
         val joinedChannel = session.onStart { ensureConnected() }
                 .flatMapLatest { it?.watchedJoinedChannel(guildId) ?: emptyFlow() }
                 .map { it?.toResponse() }
-        return joinedChannel.combine(playingTrack) { channel, track ->
-            computeBotStatus(channel, track)
-        }
-    }
-
-    private fun computeBotStatus(channel: ChannelResponse?, playingTrackInfo: TrackInfo?): BotStatus {
-        val state = when {
-            playingTrackInfo != null -> BotState.PLAYING
-            channel != null -> BotState.JOINED_IDLE
-            else -> BotState.OFFLINE
-        }
-        return BotStatus(
-                state = state,
-                joinedChannel = channel,
-                playingTrack = playingTrackInfo
-        )
+        return joinedChannel.combine(playingTrack) { channel, track -> BotStatus(channel, track) }
     }
 
     suspend fun play(guildId: Snowflake, soundFilepath: String): Boolean {
