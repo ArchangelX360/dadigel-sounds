@@ -65,7 +65,8 @@ class DiscordService(
     suspend fun join(guildId: Snowflake, channelId: Snowflake) {
         val audioProvider = audioService.registerGuild(guildId)
         getSession().join(guildId, channelId, audioProvider)
-        // FIXME unregister from audio service if join() call fails
+        // We don't unregister in case of failure to join, because we don't know the reason of the failure.
+        // It is likely that join() times out if the bot is already in the channel, and we want audio in this case.
     }
 
     suspend fun leave(guildId: Snowflake) {
