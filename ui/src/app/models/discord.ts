@@ -13,10 +13,6 @@ export interface Connection {
   channelId: string;
 }
 
-export interface IsConnectedResponse {
-  isConnected: boolean;
-}
-
 export interface BotStatus {
   state: BotState;
   joinedChannel: Channel | null;
