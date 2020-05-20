@@ -76,13 +76,12 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
      */
     fun play(guildId: Snowflake, soundIdentifier: String) {
         val resolvedIdentifier = soundIdentifier.resolveIdentifier()
-        logger.info("Playing track $resolvedIdentifier in guild $guildId")
         val provider = audioProvider[guildId]
                 ?: error("Audio provider not found for guild $guildId, you must register one to enable playing tracks")
         if (provider.player.playingTrack != null) {
             provider.player.stopTrack()
         }
-
+        logger.info("Loading track $resolvedIdentifier (to play in guild $guildId)")
         audioManager.loadItem(resolvedIdentifier, provider.scheduler)
     }
 
@@ -143,20 +142,24 @@ private class CustomAudioProvider(
 
 private class TrackScheduler(private val player: AudioPlayer) : AudioLoadResultHandler {
     override fun trackLoaded(track: AudioTrack) {
-        // LavaPlayer found an audio source for us to play
+        logger.info("Playing track ${track.identifier} (${track.info.title})")
         player.playTrack(track)
     }
 
     override fun playlistLoaded(playlist: AudioPlaylist) {
-        // LavaPlayer found multiple AudioTracks from some playlist
+        logger.info("LavaPlayer found multiple AudioTracks from playlist ${playlist.name}")
     }
 
     override fun noMatches() {
-        // LavaPlayer did not find any audio to extract
+        logger.error("LavaPlayer didn't find any audio to extract")
     }
 
     override fun loadFailed(exception: FriendlyException) {
-        // LavaPlayer could not parse an audio source for some reason
+        logger.error("LavaPlayer couldn't parse audio: ${exception.message}", exception)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TrackScheduler::class.java)
     }
 }
 
