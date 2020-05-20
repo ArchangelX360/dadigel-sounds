@@ -44,6 +44,8 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
         configuration.frameBufferFactory = NonAllocatingBufferFactory()
         // Allow playerManager to parse remote sources like YouTube links
         AudioSourceManagers.registerRemoteSources(this)
+        // Allow playerManager to load local files
+        AudioSourceManagers.registerLocalSource(this)
     }
 
     private val audioProvider: MutableMap<Snowflake, CustomAudioProvider> = ConcurrentHashMap()
