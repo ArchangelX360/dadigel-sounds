@@ -2,6 +2,7 @@ package se.dorne.discordbot.services
 
 import discord4j.core.DiscordClient
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.`object`.VoiceState
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.rest.util.Snowflake
@@ -12,17 +13,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import se.dorne.discordbot.utils.ActivityMonitor
-import se.dorne.discordbot.utils.awaitVoidWithTimeout
-import se.dorne.discordbot.utils.launchInactiveTimeout
+import se.dorne.discordbot.utils.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -72,6 +70,26 @@ class DiscordSession(
             logger.info("Bot inactive for $botInactiveTimeout, logging out")
             close()
         }
+
+        // Clean up when bot is kicked or leaves guild via some external way
+        scope.launch {
+            client.watchSelfGuildLeave().collect {
+                logger.warn("Kicked/left guild ${it.guildId}")
+                ensureVoiceDisconnectedFrom(it.guildId)
+            }
+        }
+
+        // Clean up when bot is disconnected from voice channel externally
+        // (also triggered when disconnecting by calling leave, but should be a noop in this case)
+        scope.launch {
+            client.watchSelfVoiceStateUpdates().collect {
+                val oldState: VoiceState? = it.old.orElse(null)
+                val prevChannelId = oldState?.channelId?.orElse(null)
+                if (prevChannelId != null) {
+                    ensureVoiceDisconnectedFrom(oldState.guildId)
+                }
+            }
+        }
     }
 
     fun watchGuilds(): Flow<List<Guild>> = guildWatcher.guilds
@@ -85,9 +103,7 @@ class DiscordSession(
 
     suspend fun join(guildId: Snowflake, channelId: Snowflake, audioProvider: AudioProvider) {
         activityMonitor.notify()
-        if (connectionsByGuild.containsKey(guildId)) {
-            leave(guildId)
-        }
+        ensureVoiceDisconnectedFrom(guildId)
         val alreadyInChannel = isInChannel(guildId, channelId)
         if (alreadyInChannel) {
             logger.warn("Trying to join channel $channelId in guild $guildId while already in it")
@@ -103,7 +119,7 @@ class DiscordSession(
         val guild = client.getGuildById(guildId).awaitFirst()
         val channel = guild.getChannelById(channelId).awaitFirst()
         if (channel !is VoiceChannel) {
-            logger.error("channel $channelId (${channel.name}) is not a voice channel")
+            logger.error("Channel $channelId (${channel.name}) is not a voice channel")
             return
         }
         val connection = withTimeoutOrNull(5.seconds) {
@@ -115,18 +131,24 @@ class DiscordSession(
         }
         connectionsByGuild[guildId] = connection
         getOrCreateJoinedChannelState(guildId).value = channel
+        logger.info("Connected to voice channel $channelId in guild $guildId")
     }
 
     suspend fun leave(guildId: Snowflake) {
         activityMonitor.notify()
+        ensureVoiceDisconnectedFrom(guildId)
+    }
+
+    private suspend fun ensureVoiceDisconnectedFrom(guildId: Snowflake) {
         try {
-            val connection = connectionsByGuild.remove(guildId)
-            if (connection == null) {
-                logger.warn("Trying to leave guild $guildId with no active connection")
-                return
+            val connection = connectionsByGuild.remove(guildId) ?: return
+            if (connection.isConnected) {
+                connection.disconnect()
+                    .awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
+                logger.info("Disconnected voice from guild $guildId")
+            } else {
+                logger.info("Cleaned up voice connection from guild $guildId (disconnected externally)")
             }
-            connection.disconnect()
-                .awaitVoidWithTimeout(message = "Timed out when disconnecting voice from guild $guildId")
         } finally {
             joinedChannelsByGuild[guildId]?.value = null
         }

@@ -4,14 +4,12 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.channel.VoiceChannel
 import discord4j.core.event.domain.Event
+import discord4j.core.event.domain.VoiceStateUpdateEvent
 import discord4j.core.event.domain.channel.ChannelEvent
 import discord4j.core.event.domain.channel.VoiceChannelCreateEvent
 import discord4j.core.event.domain.channel.VoiceChannelDeleteEvent
 import discord4j.core.event.domain.channel.VoiceChannelUpdateEvent
-import discord4j.core.event.domain.guild.GuildCreateEvent
-import discord4j.core.event.domain.guild.GuildDeleteEvent
-import discord4j.core.event.domain.guild.GuildEvent
-import discord4j.core.event.domain.guild.GuildUpdateEvent
+import discord4j.core.event.domain.guild.*
 import discord4j.rest.util.Snowflake
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -29,6 +27,12 @@ fun GatewayDiscordClient.watchVoiceChannelsForGuild(guildId: Snowflake): Flow<Se
     watch<ChannelEvent>()
         .filterVoiceChannelEventsForGuild(guildId)
         .updatingChannelSet { fetchVoiceChannels(guildId) }
+
+fun GatewayDiscordClient.watchSelfVoiceStateUpdates(): Flow<VoiceStateUpdateEvent> =
+    watch<VoiceStateUpdateEvent>().filter { it.current.userId == selfId.awaitFirstOrNull() }
+
+fun GatewayDiscordClient.watchSelfGuildLeave(): Flow<MemberLeaveEvent> =
+    watch<MemberLeaveEvent>().filter { it.user.id == selfId.awaitFirstOrNull() }
 
 inline fun <reified E : Event> GatewayDiscordClient.watch(): Flow<E> = on(E::class.java).asFlow()
 
