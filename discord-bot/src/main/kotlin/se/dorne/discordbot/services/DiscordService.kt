@@ -82,10 +82,9 @@ class DiscordService(
         return joinedChannel.combine(playingTrack) { channel, track -> BotStatus(channel, track) }
     }
 
-    suspend fun play(guildId: Snowflake, soundFilepath: String): Boolean {
+    suspend fun play(guildId: Snowflake, soundFilepath: String) {
         getSession().activityMonitor.notify()
         audioService.play(guildId, soundFilepath)
-        return true // FIXME: stream the state of the player to the client instead (e.g. currently playing, then done)
     }
 
     override fun destroy() {

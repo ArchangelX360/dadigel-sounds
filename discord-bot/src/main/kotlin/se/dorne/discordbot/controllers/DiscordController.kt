@@ -45,5 +45,8 @@ class DiscordController(
     suspend fun play(
             @PathVariable guildId: String,
             @RequestParam soundIdentifier: String
-    ): Boolean = discordService.play(Snowflake.of(guildId), soundIdentifier)
+    ): Boolean {
+        discordService.play(Snowflake.of(guildId), soundIdentifier)
+        return true
+    }
 }
