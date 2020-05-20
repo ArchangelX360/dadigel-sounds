@@ -87,7 +87,7 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
     }
 
     private fun String.resolveIdentifier(): String {
-        if (soundsConfiguration.supportedExtensions.any { this.endsWith(it) }) {
+        if (isLocalFileId()) {
             val rootPath = Paths.get(soundsConfiguration.folder).normalize().toAbsolutePath()
             val path = Paths.get(soundsConfiguration.folder, this).normalize().toAbsolutePath()
             if (!path.startsWith(rootPath)) {
@@ -97,6 +97,9 @@ class AudioService(@Autowired private val soundsConfiguration: SoundsConfigurati
         }
         return this
     }
+
+    private fun String.isLocalFileId(): Boolean =
+        !startsWith("http") && soundsConfiguration.supportedExtensions.any { this.endsWith(it) }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(AudioService::class.java)
