@@ -126,5 +126,8 @@
         }
       }
     }},
-  "defaultProject": "dadigel-sounds"
+  "defaultProject": "dadigel-sounds",
+  "cli": {
+    "analytics": false
+  }
 }
